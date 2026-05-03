@@ -1,0 +1,11 @@
+const express = require('express');
+const TripController = require('./trip.controller');
+const upload = require('../../middleware/upload.middleware');
+
+const router = express.Router();
+const tripController = new TripController();
+
+router.get('/', (req, res) => tripController.getAllTrips(req, res));
+router.post('/', upload.single('image'), (req, res) => tripController.createTrip(req, res));
+
+module.exports = router;
