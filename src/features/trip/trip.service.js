@@ -44,6 +44,10 @@ class TripService {
 
         return this.tripRepo.update(tripId, fields);
     }
+
+    async deleteTrip(tripId) {
+        return this.tripRepo.delete(tripId);
+    }
 }
 
 module.exports = TripService;

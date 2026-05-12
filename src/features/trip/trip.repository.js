@@ -16,6 +16,10 @@ class TripRepository {
     async update(tripId, fields) {
         return this.dao.update(tripId, fields);
     }
+
+    async delete(tripId) {
+        return this.dao.delete(tripId);
+    }
 }
 
 module.exports = TripRepository;

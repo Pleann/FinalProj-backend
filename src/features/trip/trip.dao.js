@@ -41,6 +41,15 @@ class TripDao {
         if (rows.length === 0) throw new Error('Trip not found');
         return new TripEntity(rows[0]);
     }
+
+    async delete(tripId) {
+        const { rows } = await pool.query(
+            `DELETE FROM trip WHERE trip_id = $1 RETURNING *`,
+            [tripId]
+        );
+        if (rows.length === 0) throw new Error('Trip not found');
+        return new TripEntity(rows[0]);
+    }
 }
 
 module.exports = TripDao;

@@ -42,6 +42,16 @@ class TripController {
             res.status(400).json({ error: err.message });
         }
     }
+
+    async deleteTrip(req, res) {
+        try {
+            const { tripId } = req.params;
+            await this.tripService.deleteTrip(tripId);
+            res.status(200).json({ message: 'Trip deleted successfully' });
+        } catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    }
 }
 
 module.exports = TripController;
