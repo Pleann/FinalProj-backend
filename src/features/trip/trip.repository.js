@@ -12,6 +12,10 @@ class TripRepository {
     async findAll() {
         return this.dao.findAll();
     }
+
+    async update(tripId, fields) {
+        return this.dao.update(tripId, fields);
+    }
 }
 
 module.exports = TripRepository;

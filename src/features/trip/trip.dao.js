@@ -24,6 +24,23 @@ class TripDao {
         const { rows } = await pool.query(`SELECT * FROM trip`);
         return rows.map(row => new TripEntity(row));
     }
+
+    async update(tripId, fields) {
+        const keys = Object.keys(fields);
+        const values = Object.values(fields);
+
+        // Dynamically build SET clause: "trip_name = $1, start_time = $2 ..."
+        const setClause = keys.map((key, i) => `${key} = $${i + 1}`).join(', ');
+        values.push(tripId); // last placeholder for WHERE
+
+        const { rows } = await pool.query(
+            `UPDATE trip SET ${setClause} WHERE trip_id = $${values.length} RETURNING *`,
+            values
+        );
+
+        if (rows.length === 0) throw new Error('Trip not found');
+        return new TripEntity(rows[0]);
+    }
 }
 
 module.exports = TripDao;

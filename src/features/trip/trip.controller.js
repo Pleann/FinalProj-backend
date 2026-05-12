@@ -29,6 +29,19 @@ class TripController {
             res.status(500).json({ error: err.message });
         }
     }
+
+    async updateTrip(req, res) {
+        try {
+            const { tripId } = req.params;
+            const trip = await this.tripService.updateTrip(tripId, req.body, req.file);
+            res.status(200).json({
+                message: 'Trip updated successfully',
+                trip: new TripResponseDto(trip),
+            });
+        } catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    }
 }
 
 module.exports = TripController;
