@@ -28,6 +28,7 @@ class TripResponseDto {
         this.meetingPoint    = entity.meetingPoint;
         this.imageUrl        = entity.imageUrl;
         this.createdBy       = entity.createdBy;
+        this.status          = entity.status;
     }
 }
 

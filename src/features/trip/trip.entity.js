@@ -8,6 +8,7 @@ class TripEntity {
         this.tripDestination = row.trip_destination;
         this.meetingPoint = row.meeting_point;
         this.imageUrl = row.image_url;
+        this.status = row.status;
         this.createdBy = row.created_by;
     }
 }
