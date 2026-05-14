@@ -45,6 +45,14 @@ class TripService {
         return this.tripRepo.update(tripId, fields);
     }
 
+    async updateTripStatus(tripId, status) {
+        const validStatuses = ['Upcoming', 'Ongoing', 'Completed'];
+        if (!validStatuses.includes(status)) {
+            throw new Error('Invalid status. Must be Upcoming, Ongoing or Completed');
+        }
+        return this.tripRepo.update(tripId, { trip_status: status });
+    }
+
     async deleteTrip(tripId) {
         return this.tripRepo.delete(tripId);
     }

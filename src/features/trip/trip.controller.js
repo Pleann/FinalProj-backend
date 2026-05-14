@@ -43,6 +43,21 @@ class TripController {
         }
     }
 
+    async updateTripStatus(req, res) {
+        try {
+            const { tripId } = req.params;
+            const { status } = req.body;
+            if (!status) throw new Error ('status is required');
+            const trip = await this.tripService.updateTripStatus(tripId, status);
+            res.status(200).json({
+                message: 'Trip status updated successfully',
+                trip: new TripResponseDto(trip),
+            });
+        } catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    }
+
     async deleteTrip(req, res) {
         try {
             const { tripId } = req.params;

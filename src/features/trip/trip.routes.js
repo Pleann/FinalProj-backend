@@ -8,6 +8,8 @@ const tripController = new TripController();
 router.get('/', (req, res) => tripController.getAllTrips(req, res));
 router.post('/', upload.single('image'), (req, res) => tripController.createTrip(req, res));
 router.patch('/:tripId', upload.single('image'), (req, res) => tripController.updateTrip(req, res));
+router.patch('/:tripId/status', (req, res) => tripController.updateTripStatus(req, res));
 router.delete('/:tripId', (req, res) => tripController.deleteTrip(req, res));
+
 
 module.exports = router;
