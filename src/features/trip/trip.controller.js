@@ -30,6 +30,33 @@ class TripController {
         }
     }
 
+    async getUpcomingTrips(req, res) {
+        try {
+            const trips = await this.tripService.getUpcomingTrips();
+            res.status(200).json(trips.map(trip => new TripResponseDto(trip)));
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    }
+
+    async getOngoingTrips(req, res) {
+        try {
+            const trips = await this.tripService.getOngoingTrips();
+            res.status(200).json(trips.map(trip => new TripResponseDto(trip)));
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    }
+
+    async getCompletedTrips(req, res) {
+        try {
+            const trips = await this.tripService.getCompletedTrips();
+            res.status(200).json(trips.map(trip => new TripResponseDto(trip)));
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    }
+
     async updateTrip(req, res) {
         try {
             const { tripId } = req.params;

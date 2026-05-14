@@ -17,6 +17,18 @@ class TripService {
         return this.tripRepo.findAll();
     }
 
+    async getUpcomingTrips() {
+        return this.tripRepo.findUpcoming();
+    }
+
+    async getOngoingTrips() {
+        return this.tripRepo.findOngoing();
+    }
+
+    async getCompletedTrips() {
+        return this.tripRepo.findCompleted();
+    }
+
     async updateTrip(tripId, body, file) {
         const fields = {};
 

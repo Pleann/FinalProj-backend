@@ -13,6 +13,18 @@ class TripRepository {
         return this.dao.findAll();
     }
 
+    async findUpcoming() {
+        return this.dao.findByStatus('Upcoming');
+    }
+
+    async findOngoing() {
+        return this.dao.findByStatus('Ongoing');
+    }
+
+    async findCompleted() {
+        return this.dao.findByStatus('Completed');
+    }
+
     async update(tripId, fields) {
         return this.dao.update(tripId, fields);
     }
