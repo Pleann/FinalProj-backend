@@ -12,6 +12,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - roamio-network
+
 
   db:
     image: postgres:16-alpine
@@ -28,6 +31,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - roamio-network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -38,6 +43,12 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
     depends_on:
       - db
+    networks:
+      - roamio-network
+
+networks:
+  roamio-network:
+    driver: bridge
 
 volumes:
   postgres_data:
