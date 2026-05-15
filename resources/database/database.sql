@@ -1,6 +1,17 @@
+DO $$ BEGIN
 CREATE TYPE trip_status AS ENUM ('Upcoming', 'Ongoing', 'Completed');
-CREATE TYPE member_status AS ENUM ('Participating','Not_participating','Cancelled','Undecided');
-CREATE TYPE invite_status AS ENUM ('Accept','Reject','Cancelled','Undecided');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+CREATE TYPE member_status AS ENUM ('Participating', 'Not_participating', 'Cancelled', 'Undecided');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+CREATE TYPE invite_status AS ENUM ('Accept', 'Reject', 'Cancelled', 'Undecided');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS Account (
                                        user_id          SERIAL PRIMARY KEY,
