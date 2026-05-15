@@ -25,6 +25,14 @@ class TripDao {
         return rows.map(row => new TripEntity(row));
     }
 
+    async findByStatus(status) {
+        const { rows } = await pool.query(
+            `SELECT * FROM trip WHERE trip_status = $1`,
+            [status]
+        );
+        return rows.map(row => new TripEntity(row));
+    }
+
     async update(tripId, fields) {
         const keys = Object.keys(fields);
         const values = Object.values(fields);

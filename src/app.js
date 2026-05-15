@@ -11,6 +11,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
+app.use('/api/trips/:tripId/invites', require('./features/tripInvite/tripInvite.routes'));
+app.use('/api/trips/:tripId/members', require('./features/tripMember/tripMember.routes'));
 app.use('/api/trips', require('./features/trip/trip.routes'));
 
 module.exports = app;

@@ -24,11 +24,12 @@ class TripResponseDto {
         this.tripName        = entity.tripName;
         this.startTime       = entity.startTime;
         this.endTime         = entity.endTime;
+        this.meetUpTime      = entity.meetUpTime;
         this.tripDestination = entity.tripDestination;
         this.meetingPoint    = entity.meetingPoint;
         this.imageUrl        = entity.imageUrl;
-        this.createdBy       = entity.createdBy;
         this.tripStatus      = entity.tripStatus;
+        this.createdBy       = entity.createdBy;
     }
 }
 
