@@ -1,0 +1,41 @@
+const pool = require('../../config/db');
+const TripMemberEntity = require('./tripMember.entity');
+
+class TripMemberDao {
+    async findByTrip(tripId) {
+        const { rows } = await pool.query(
+            `SELECT * FROM TripMember WHERE trip_id = $1`,
+            [tripId]
+        );
+        return rows.map(row => new TripMemberEntity(row));
+    }
+
+    async findById(participantId) {
+        const { rows } = await pool.query(
+            `SELECT * FROM TripMember WHERE participant_id = $1`,
+            [participantId]
+        );
+        if (rows.length === 0) throw new Error('Member not found');
+        return new TripMemberEntity(rows[0]);
+    }
+
+    async updateStatus(participantId, memberStatus) {
+        const { rows } = await pool.query(
+            `UPDATE TripMember SET member_status = $1 WHERE participant_id = $2 RETURNING *`,
+            [memberStatus, participantId]
+        );
+        if (rows.length === 0) throw new Error('Member not found');
+        return new TripMemberEntity(rows[0]);
+    }
+
+    async delete(participantId) {
+        const { rows } = await pool.query(
+            `DELETE FROM TripMember WHERE participant_id = $1 RETURNING *`,
+            [participantId]
+        );
+        if (rows.length === 0) throw new Error('Member not found');
+        return new TripMemberEntity(rows[0]);
+    }
+}
+
+module.exports = TripMemberDao;
