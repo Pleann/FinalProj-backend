@@ -39,9 +39,9 @@ class TripController {
         }
     }
 
-    async getOngoingTrips(req, res) {
+    async getActiveTrips(req, res) {
         try {
-            const trips = await this.tripService.getOngoingTrips();
+            const trips = await this.tripService.getActiveTrips();
             res.status(200).json(trips.map(trip => new TripResponseDto(trip)));
         } catch (err) {
             res.status(500).json({ error: err.message });

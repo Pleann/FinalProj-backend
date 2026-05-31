@@ -21,8 +21,8 @@ class TripService {
         return this.tripRepo.findUpcoming();
     }
 
-    async getOngoingTrips() {
-        return this.tripRepo.findOngoing();
+    async getActiveTrips() {
+        return this.tripRepo.findActive();
     }
 
     async getCompletedTrips() {
@@ -58,9 +58,9 @@ class TripService {
     }
 
     async updateTripStatus(tripId, status) {
-        const validStatuses = ['Upcoming', 'Ongoing', 'Completed'];
+        const validStatuses = ['Upcoming', 'Active', 'Completed'];
         if (!validStatuses.includes(status)) {
-            throw new Error('Invalid status. Must be Upcoming, Ongoing or Completed');
+            throw new Error('Invalid status. Must be Upcoming, Active or Completed');
         }
         return this.tripRepo.update(tripId, { trip_status: status });
     }

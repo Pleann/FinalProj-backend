@@ -17,8 +17,8 @@ class TripRepository {
         return this.dao.findByStatus('Upcoming');
     }
 
-    async findOngoing() {
-        return this.dao.findByStatus('Ongoing');
+    async findActive() {
+        return this.dao.findByStatus('Active');
     }
 
     async findCompleted() {

@@ -1,4 +1,4 @@
-CREATE TYPE trip_status AS ENUM ('Upcoming', 'Ongoing', 'Completed');
+CREATE TYPE trip_status AS ENUM ('Upcoming', 'Active', 'Completed');
 CREATE TYPE member_status AS ENUM ('Participating','Not_participating','Cancelled','Undecided')
 CREATE TYPE invite_status AS ENUM ('Accept','Reject','Cancelled','Undecided')
 
