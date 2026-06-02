@@ -1,5 +1,5 @@
 DO $$ BEGIN
-CREATE TYPE trip_status AS ENUM ('Upcoming', 'Ongoing', 'Completed');
+CREATE TYPE trip_status AS ENUM ('Upcoming', 'Active', 'Completed');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
