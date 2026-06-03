@@ -13,6 +13,7 @@ class CreateTripDto {
         this.tripName        = body.tripName.trim();
         this.startTime       = body.startTime;
         this.endTime         = body.endTime;
+        this.meetUpTime      = body.meetUpTime;
         this.tripDestination = body.tripDestination.trim();
         this.meetingPoint    = body.meetingPoint?.trim() || null;
     }

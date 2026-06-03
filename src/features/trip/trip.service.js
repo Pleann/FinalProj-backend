@@ -6,7 +6,7 @@ class TripService {
         this.tripRepo = new TripRepository();
     }
 
-    async createTrip(createTripDto, ownerId) {
+    async createTrip(createTripDto, ownerId, file) {
         if (file) {
             createTripDto.imageUrl = await uploadImage(file);
         }
