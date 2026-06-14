@@ -1,0 +1,167 @@
+const TripActivityRepository = require('./tripActivity.repository');
+
+const STOP_RADIUS_M    = 500;
+const STOP_MIN_MS      = 5 * 60_000; // 5 minutes in milliseconds
+const EARTH_RADIUS_M   = 6_371_000;
+const PLACES_API_URL   = 'https://places.googleapis.com/v1/places:searchNearby';
+
+//Review this
+const ACTIVITY_TYPE_MAP = {
+    restaurant: 'Dining',   cafe: 'Dining',
+    bar:        'Dining',   bakery: 'Dining',
+    museum:         'Sightseeing', art_gallery:      'Sightseeing',
+    tourist_attraction: 'Sightseeing', amusement_park: 'Sightseeing',
+    lodging:    'Accommodation', hotel: 'Accommodation',
+    transit_station: 'Transit', airport: 'Transit', bus_station: 'Transit',
+};
+
+function deriveActivityType(googleTypes = []) {
+    for (const type of googleTypes) {
+        if (ACTIVITY_TYPE_MAP[type]) return ACTIVITY_TYPE_MAP[type];
+    }
+    return 'Other';
+}
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+    const toRad = deg => (deg * Math.PI) / 180;
+    const dLat  = toRad(lat2 - lat1);
+    const dLon  = toRad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return EARTH_RADIUS_M * 2 * Math.asin(Math.sqrt(a));
+}
+
+class TripActivityService {
+    constructor() {
+        this.activityRepo  = new TripActivityRepository();
+        this.placesApiKey  = process.env.GOOGLE_PLACES_API_KEY;
+
+        // In-memory tracker for pending stops (not yet confirmed)
+        // Structure: { userId_tripId: { stopId, latitude, longitude, enteredAt } }
+        this.pendingStops = {};
+    }
+
+    async confirmStop(tripId, userId, latitude, longitude, timestamp) {
+        const key       = `${userId}_${tripId}`;
+        const now       = new Date(timestamp);
+        const pending   = this.pendingStops[key];
+
+        if (pending) {
+            const dist = haversineDistance(
+                latitude, longitude,
+                pending.latitude, pending.longitude
+            );
+
+            if (dist <= STOP_RADIUS_M) {
+                // Still within radius — check if minimum time has elapsed
+                const elapsed = now - new Date(pending.enteredAt);
+                if (elapsed >= STOP_MIN_MS) {
+                    // Stop confirmed — close it and enrich with Google Places
+                    const stop = await this.activityRepo.closeStop(pending.stopId, now);
+                    delete this.pendingStops[key];
+                    // Fire and forget enrichment so we don't block the response
+                    this.createActivityFromStop(stop).catch(console.error);
+                    return stop;
+                }
+                // Still waiting — not confirmed yet
+                return null;
+            } else {
+                // Left the radius before minimum time — discard pending stop
+                delete this.pendingStops[key];
+            }
+        }
+
+        // Start tracking a new potential stop
+        const newStop = await this.activityRepo.saveStop(
+            tripId, userId, latitude, longitude, now
+        );
+        this.pendingStops[key] = {
+            stopId:    newStop.stopId,
+            latitude,
+            longitude,
+            enteredAt: now,
+        };
+        return null;
+    }
+
+    async getStops(tripId) {
+        return this.activityRepo.findStopsByTrip(tripId);
+    }
+
+    async detectPlaceType(latitude, longitude) {
+        const result = await this.callGooglePlacesAPI(latitude, longitude);
+        return result;
+    }
+
+    async createActivityFromStop(stop) {
+        const placeData = await this.callGooglePlacesAPI(
+            parseFloat(stop.latitude),
+            parseFloat(stop.longitude)
+        );
+
+        const activity = await this.activityRepo.saveActivity(
+            stop.tripId,
+            stop.userId,
+            placeData.locationName,
+            placeData.locationType,
+            deriveActivityType(placeData.types),
+            stop.enteredAt,
+            stop.exitedAt,
+        );
+
+        // Link stop → activity
+        await this.activityRepo.linkStopToActivity(stop.stopId, activity.activityId);
+
+        return activity;
+    }
+
+    async getTimeline(tripId) {
+        return this.activityRepo.findActivitiesByTrip(tripId);
+    }
+
+    async getActivityByStop(stopId) {
+        const stop = await this.activityRepo.findStopById(stopId);
+        if (!stop) throw new Error('Stop not found');
+        if (!stop.activityId) throw new Error('No activity linked to this stop yet');
+        return this.activityRepo.findActivityById(stop.activityId);
+    }
+
+    async callGooglePlacesAPI(latitude, longitude) {
+        const response = await fetch(PLACES_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type':     'application/json',
+                'X-Goog-Api-Key':   this.placesApiKey,
+                'X-Goog-FieldMask': 'places.displayName,places.types',
+            },
+            body: JSON.stringify({
+                includedTypes: [],
+                maxResultCount: 1,
+                locationRestriction: {
+                    circle: {
+                        center: { latitude, longitude },
+                        radius: 50.0, // tight radius to get the most relevant place
+                    },
+                },
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Google Places API error: ${response.statusText}`);
+        }
+
+        const data  = await response.json();
+        const place = data.places?.[0];
+
+        if (!place) throw new Error('No place found at this location');
+
+        return {
+            locationName: place.displayName?.text ?? 'Unknown',
+            locationType: place.types?.[0]        ?? 'Unknown',
+            types:        place.types              ?? [],
+        };
+    }
+}
+
+module.exports = TripActivityService;

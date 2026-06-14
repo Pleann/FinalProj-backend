@@ -75,9 +75,9 @@ CREATE TABLE IF NOT EXISTS Activity (
                                           activity_id       SERIAL PRIMARY KEY,
                                           trip_id           INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
                                           user_id           INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
-                                          location_name     VARCHAR(255) NOT NULL,
-                                          location_type     VARCHAR(255) NOT NULL,
-                                          activity_type     VARCHAR(255) NOT NULL,
+                                          location_name     VARCHAR(255),
+                                          location_type     VARCHAR(255),
+                                          activity_type     VARCHAR(255),
                                           ac_start_time     TIMESTAMP NOT NULL,
                                           ac_end_time       TIMESTAMP NOT NULL,
 
@@ -94,4 +94,15 @@ CREATE TABLE IF NOT EXISTS Expense (
                                           currency          CHAR(3),
                                           billimage_url     TEXT,
                                           expense_timestamp TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS Stop (
+                                    stop_id     SERIAL PRIMARY KEY,
+                                    trip_id     INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
+                                    user_id     INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+                                    activity_id INTEGER REFERENCES Activity(activity_id) ON DELETE SET NULL,
+                                    latitude    DECIMAL(8,6) NOT NULL,
+                                    longitude   DECIMAL(9,6) NOT NULL,
+                                    entered_at  TIMESTAMP NOT NULL,
+                                    exited_at   TIMESTAMP
 );
