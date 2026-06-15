@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS Expense (
                                           activity_id       INTEGER REFERENCES Activity(activity_id) ON DELETE CASCADE,
                                           expense_name      VARCHAR(255) NOT NULL,
                                           amount            NUMERIC(12,2) NOT NULL,
-                                          currency          CHAR(3),
+                                          currency          VARCHAR(5),
                                           billimage_url     TEXT,
                                           expense_timestamp TIMESTAMP
 );

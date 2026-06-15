@@ -1,8 +1,8 @@
 const supabase = require('../config/supabase');
 
-const uploadImage = async (file) => {
+const uploadImage = async (file, folder = 'trips') => {
     const ext = file.mimetype.split('/')[1];
-    const fileName = `trips/${Date.now()}.${ext}`;
+    const fileName = `${folder}/${Date.now()}.${ext}`;
 
     const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
 
