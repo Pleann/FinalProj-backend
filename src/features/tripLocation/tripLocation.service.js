@@ -5,9 +5,10 @@ const VICINITY_RADIUS_M  = 500;
 const MAJORITY_THRESHOLD = 3 / 5;
 const MS_PER_MIN         = 60_000;
 
-const VERY_EARLY_MS = 15 * MS_PER_MIN;
+//const VERY_EARLY_MS = 15 * MS_PER_MIN;
 const EARLY_MS      =  5 * MS_PER_MIN;
 const ON_TIME_MS    =  5 * MS_PER_MIN;
+const LATE_MIN_MS   =  5 * MS_PER_MIN;
 const LATE_MAX_MS   = 60 * MS_PER_MIN;
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -21,10 +22,11 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 }
 
 function classifyAttendance(deltaMs) {
-    if (deltaMs <= -VERY_EARLY_MS) return 'VeryEarly';
+    //if (deltaMs <= -VERY_EARLY_MS) return 'VeryEarly';
     if (deltaMs <= -EARLY_MS)      return 'Early';
     if (deltaMs <=  ON_TIME_MS)    return 'OnTime';
-    if (deltaMs <=  LATE_MAX_MS)   return 'Late';
+    if (deltaMs <=  LATE_MIN_MS)   return 'Late';
+    if (deltaMs <=  LATE_MAX_MS)   return 'VeryLate';
     return 'Missing';
 }
 

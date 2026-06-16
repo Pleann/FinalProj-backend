@@ -19,6 +19,7 @@ class TripInviteService {
     }
 
     async getInvitesByTrip(tripId) {
+        if (!tripId) throw new Error('Could not fetch invite by tripId')
         return this.inviteRepo.findByTrip(tripId);
     }
 

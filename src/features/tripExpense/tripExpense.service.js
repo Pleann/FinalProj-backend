@@ -25,11 +25,13 @@ class TripExpenseService {
 
     // ── getExpensesByActivity ─────────────────────────────────────────────────
     async getExpensesByActivity(activityId) {
+        if (!activityId) throw new Error('Could not fetch expense by activityId')
         return this.expenseRepo.findByActivity(activityId);
     }
 
     // ── getExpensesByTrip ─────────────────────────────────────────────────────
     async getExpensesByTrip(tripId) {
+        if (!tripId) throw new Error('Could not fetch expense by tripId')
         return this.expenseRepo.findByTrip(tripId);
     }
 
@@ -54,7 +56,6 @@ class TripExpenseService {
         const expense = await this.expenseRepo.findById(expenseId);
         if (!expense) throw new Error('Expense not found');
 
-        // If a receipt image exists, remove it from Supabase Storage too
         if (expense.billImageUrl) {
             await this._deleteFromStorage(expense.billImageUrl);
         }
@@ -67,7 +68,6 @@ class TripExpenseService {
         const expense = await this.expenseRepo.findById(expenseId);
         if (!expense) throw new Error('Expense not found');
 
-        // Delete old receipt from storage if one exists
         if (expense.billImageUrl) {
             await this._deleteFromStorage(expense.billImageUrl);
         }

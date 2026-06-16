@@ -7,8 +7,8 @@ const PLACES_API_URL   = 'https://places.googleapis.com/v1/places:searchNearby';
 
 //Review this
 const ACTIVITY_TYPE_MAP = {
-    restaurant: 'Dining',   cafe: 'Dining',
-    bar:        'Dining',   bakery: 'Dining',
+    restaurant: 'Food',   cafe: 'Food',
+    bar:        'Food',   bakery: 'Food',
     museum:         'Sightseeing', art_gallery:      'Sightseeing',
     tourist_attraction: 'Sightseeing', amusement_park: 'Sightseeing',
     lodging:    'Accommodation', hotel: 'Accommodation',
@@ -86,11 +86,13 @@ class TripActivityService {
     }
 
     async getStops(tripId) {
+        if (!tripId) throw new Error('Could not fetch stop by tripId')
         return this.activityRepo.findStopsByTrip(tripId);
     }
 
     async detectPlaceType(latitude, longitude) {
         const result = await this.callGooglePlacesAPI(latitude, longitude);
+        if (!result) throw new Error('Could not fetch placeType')
         return result;
     }
 
@@ -127,6 +129,7 @@ class TripActivityService {
         return this.activityRepo.findActivityById(stop.activityId);
     }
 
+    //review this
     async callGooglePlacesAPI(latitude, longitude) {
         const response = await fetch(PLACES_API_URL, {
             method: 'POST',

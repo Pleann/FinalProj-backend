@@ -7,6 +7,7 @@ class TripService {
     }
 
     async createTrip(createTripDto, ownerId, file) {
+        if (!createTripDto) throw new Error('Could not create trip')
         if (file) {
             createTripDto.imageUrl = await uploadImage(file);
         }
@@ -14,19 +15,27 @@ class TripService {
     }
 
     async getAllTrips() {
-        return this.tripRepo.findAll();
+        const trips = await this.tripRepo.findAll();
+        if (!trips) throw new Error('Could not find all trips');
+        return trips;
     }
 
     async getUpcomingTrips() {
-        return this.tripRepo.findUpcoming();
+        const trips = await this.tripRepo.findUpcoming();
+        if (!trips) throw new Error('Could not find upcoming trips');
+        return trips;
     }
 
     async getActiveTrips() {
-        return this.tripRepo.findActive();
+        const trips = await this.tripRepo.findActive();
+        if (!trips) throw new Error('Could not find Active trips');
+        return trips;
     }
 
     async getCompletedTrips() {
-        return this.tripRepo.findCompleted();
+        const trips = await this.tripRepo.findCompleted();
+        if (!trips) throw new Error('Could not find completed trips');
+        return trips;
     }
 
     async updateTrip(tripId, body, file) {
@@ -66,6 +75,7 @@ class TripService {
     }
 
     async deleteTrip(tripId) {
+        if (!tripId) throw new Error('Could not find trip ID')
         return this.tripRepo.delete(tripId);
     }
 }

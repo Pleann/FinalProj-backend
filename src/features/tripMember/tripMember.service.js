@@ -7,6 +7,7 @@ class TripMemberService {
     }
 
     async getMembersByTrip(tripId) {
+        if (!tripId) throw new Error('Could not fetch member by tripId')
         return this.memberRepo.findByTrip(tripId);
     }
 
