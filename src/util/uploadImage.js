@@ -13,7 +13,7 @@ const uploadImage = async (file, folder = 'trips') => {
             upsert: false,
         });
 
-    if (error) throw new Error(`5. Image upload failed: ${error.message}`);
+    if (error) throw new Error(`Image upload failed: ${error.message}`);
 
     const { data: { publicUrl } } = supabase.storage
         .from(process.env.SUPABASE_BUCKET)
