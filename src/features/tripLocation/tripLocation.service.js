@@ -1,4 +1,7 @@
 const LocationRepository = require('./tripLocation.repository');
+const TripMemberRepository = require('../tripMember/tripMember.repository');
+const sendNotification     = require('../../util/sendNotification');
+
 
 const EARTH_RADIUS_M     = 6_371_000;
 const VICINITY_RADIUS_M  = 500;
@@ -29,6 +32,7 @@ function classifyAttendance(deltaMs) {
 class LocationService {
     constructor() {
         this.locationRepo = new LocationRepository();
+        this.tripMemberRepo = new TripMemberRepository();
     }
 
     async confirmStart(tripId) {
@@ -38,8 +42,20 @@ class LocationService {
 
         const activated = await this.locationRepo.activateTrip(tripId);
 
-        // TODO: send trip-start notification to all members
-        // await notificationService.sendTripStarted(tripId);
+        const members = await this.tripMemberRepo.findByTrip(tripId);
+        const userIds = members
+            .filter(m => m.member_status === 'Participating')
+            .map(m => m.user_id);
+
+        if (userIds.length > 0) {
+            await sendNotification(
+                userIds,
+                tripId,
+                'TripStarted',
+                `Trip "${trip.trip_name}" has started! Tracking is now active.`,
+            );
+        }
+
 
         return activated;
     }

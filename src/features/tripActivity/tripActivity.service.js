@@ -1,4 +1,5 @@
 const TripActivityRepository = require('./tripActivity.repository');
+const sendNotification = require('../../util/sendNotification');
 
 const STOP_RADIUS_M    = 500;
 const STOP_MIN_MS      = 5 * 60_000; // 5 minutes in milliseconds
@@ -114,6 +115,13 @@ class TripActivityService {
 
         // Link stop → activity
         await this.activityRepo.linkStopToActivity(stop.stopId, activity.activityId);
+
+        await sendNotification(
+            [stop.userId],
+            stop.tripId,
+            'ExpensePrompt',
+            `You stopped at ${activity.locationName}. Don't forget to log any expenses!`,
+        );
 
         return activity;
     }

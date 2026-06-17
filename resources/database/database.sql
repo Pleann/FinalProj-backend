@@ -18,6 +18,12 @@ CREATE TYPE invite_status AS ENUM ('Accept', 'Reject', 'Cancelled', 'Undecided')
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+DO $$ BEGIN
+CREATE TYPE notification_type AS ENUM ('TripStarted', 'ExpensePrompt');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+
 CREATE TABLE IF NOT EXISTS Account (
                                        user_id          SERIAL PRIMARY KEY,
                                        first_name       VARCHAR(255) NOT NULL,
@@ -106,3 +112,14 @@ CREATE TABLE IF NOT EXISTS Stop (
                                     entered_at  TIMESTAMP NOT NULL,
                                     exited_at   TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS Notification (
+                                    notification_id   SERIAL PRIMARY KEY,
+                                    user_id            INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+                                    trip_id            INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
+                                    type               notification_type NOT NULL,
+                                    message            TEXT NOT NULL,
+                                    is_read            BOOLEAN DEFAULT FALSE,
+                                    created_at         TIMESTAMP DEFAULT NOW()
+);
+
