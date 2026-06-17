@@ -9,8 +9,7 @@ class TripExpenseService {
 
     // ── createExpense ─────────────────────────────────────────────────────────
     async createExpense(tripId, createExpenseDto) {
-        // TODO: send expense input notification to trip members
-        // await notificationService.sendExpensePrompt(tripId);
+        // notification lives at tripActivity
 
         return this.expenseRepo.save(
             tripId,
