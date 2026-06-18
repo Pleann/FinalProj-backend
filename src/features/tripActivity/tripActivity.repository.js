@@ -41,6 +41,7 @@ class TripActivityRepository {
         return this.dao.findActivityById(activityId);
     }
 
+    //keep for later
     async updateActivity(activityId, fields) {
         return this.dao.updateActivity(activityId, fields);
     }

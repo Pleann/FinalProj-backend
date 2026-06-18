@@ -9,6 +9,7 @@ class LocationRepository {
         return this.dao.save(tripId, userId, latitude, longitude, timestamp);
     }
 
+    //keep for latrer
     async findByTrip(tripId) {
         return this.dao.findByTrip(tripId);
     }
