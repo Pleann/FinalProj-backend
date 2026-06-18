@@ -11,15 +11,7 @@ class TripExpenseService {
     async createExpense(tripId, createExpenseDto) {
         // notification lives at tripActivity
 
-        return this.expenseRepo.save(
-            tripId,
-            createExpenseDto.userId,
-            createExpenseDto.activityId   ?? null,
-            createExpenseDto.expenseName,
-            createExpenseDto.amount,
-            createExpenseDto.currency,
-            createExpenseDto.expenseTimestamp,
-        );
+        return this.expenseRepo.save(tripId, createExpenseDto);
     }
 
     // ── getExpensesByActivity ─────────────────────────────────────────────────

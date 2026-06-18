@@ -5,8 +5,8 @@ class LocationRepository {
         this.dao = new LocationDao();
     }
 
-    async save(tripId, userId, latitude, longitude, timestamp) {
-        return this.dao.save(tripId, userId, latitude, longitude, timestamp);
+    async save(tripId, saveLocationDto) {
+        return this.dao.save(tripId, saveLocationDto);
     }
 
     //keep for latrer

@@ -3,12 +3,12 @@ const { ActivityEntity, StopEntity } = require('./tripActivity.entity');
 
 class TripActivityDao {
 
-    async insertStop(tripId, userId, latitude, longitude, enteredAt) {
+    async insertStop(tripId, confirmStopDto) {
         const { rows } = await pool.query(
             `INSERT INTO Stop (trip_id, user_id, latitude, longitude, entered_at)
              VALUES ($1, $2, $3, $4, $5)
              RETURNING *`,
-            [tripId, userId, latitude, longitude, enteredAt]
+            [tripId, confirmStopDto]
         );
         return new StopEntity(rows[0]);
     }
@@ -47,12 +47,12 @@ class TripActivityDao {
         return rows.length ? new StopEntity(rows[0]) : null;
     }
 
-    async insertActivity(tripId, userId, locationName, locationType, activityType, startTime, endTime) {
+    async insertActivity(tripId, saveActivityDto) {
         const { rows } = await pool.query(
             `INSERT INTO Activity (trip_id, user_id, location_name, location_type, activity_type, ac_start_time, ac_end_time)
              VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING *`,
-            [tripId, userId, locationName, locationType, activityType, startTime, endTime]
+            [tripId, saveActivityDto.userId, saveActivityDto.locationName, saveActivityDto.locationType, saveActivityDto.activityType, saveActivityDto.startTime, saveActivityDto.endTime]
         );
         return new ActivityEntity(rows[0]);
     }

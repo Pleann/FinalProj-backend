@@ -43,10 +43,11 @@ class TripActivityService {
         this.pendingStops = {};
     }
 
-    async confirmStop(tripId, userId, latitude, longitude, timestamp) {
-        const key       = `${userId}_${tripId}`;
-        const now       = new Date(timestamp);
-        const pending   = this.pendingStops[key];
+    async confirmStop(tripId, confirmStopDto) {
+        const { userId, latitude, longitude, timestamp } = confirmStopDto;
+        const key                                  = `${userId}_${tripId}`;
+        const now                                  = new Date(timestamp);
+        const pending                                    = this.pendingStops[key];
 
         if (pending) {
             const dist = haversineDistance(
@@ -74,9 +75,7 @@ class TripActivityService {
         }
 
         // Start tracking a new potential stop
-        const newStop = await this.activityRepo.saveStop(
-            tripId, userId, latitude, longitude, now
-        );
+        const newStop = await this.activityRepo.saveStop(tripId, confirmStopDto);
         this.pendingStops[key] = {
             stopId:    newStop.stopId,
             latitude,
@@ -103,14 +102,14 @@ class TripActivityService {
             parseFloat(stop.longitude)
         );
 
-        const activity = await this.activityRepo.saveActivity(
-            stop.tripId,
-            stop.userId,
-            placeData.locationName,
-            placeData.locationType,
-            deriveActivityType(placeData.types),
-            stop.enteredAt,
-            stop.exitedAt,
+        const activity = await this.activityRepo.saveActivity(stop.tripId, {
+                userId: stop.userId,
+                locationName: placeData.locationName,
+                locationType: placeData.locationType,
+                activityType: deriveActivityType(placeData.types),
+                startTime: stop.enteredAt,
+                endTime: stop.exitedAt,
+            }
         );
 
         // Link stop → activity

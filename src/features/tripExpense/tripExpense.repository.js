@@ -5,8 +5,8 @@ class TripExpenseRepository {
         this.dao = new TripExpenseDao();
     }
 
-    async save(tripId, userId, activityId, expenseName, amount, currency, expenseTimestamp) {
-        return this.dao.insert(tripId, userId, activityId, expenseName, amount, currency, expenseTimestamp);
+    async save(tripId, createExpenseDto) {
+        return this.dao.insert(tripId, createExpenseDto);
     }
 
     async findByActivity(activityId) {

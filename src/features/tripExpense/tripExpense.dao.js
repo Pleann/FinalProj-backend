@@ -5,7 +5,7 @@ const VALID_CURRENCIES = ['฿', '$', '€', '£', '¥', '₩'];
 
 class TripExpenseDao {
 
-    async insert(tripId, userId, activityId, expenseName, amount, currency, expenseTimestamp) {
+    async insert(tripId, createExpenseDto) {
         if (currency && !VALID_CURRENCIES.includes(currency)) {
             throw new Error(`Invalid currency. Must be one of: ${VALID_CURRENCIES.join(', ')}`);
         }
@@ -13,7 +13,7 @@ class TripExpenseDao {
             `INSERT INTO Expense (trip_id, user_id, activity_id, expense_name, amount, currency, expense_timestamp)
              VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING *`,
-            [tripId, userId, activityId, expenseName, amount, currency ?? '฿', expenseTimestamp ?? new Date()]
+            [tripId, createExpenseDto.userId, createExpenseDto.activityId, createExpenseDto.expenseName, createExpenseDto.amount, createExpenseDto.currency ?? '฿', createExpenseDto.expenseTimestamp ?? new Date()]
         );
         return new ExpenseEntity(rows[0]);
     }

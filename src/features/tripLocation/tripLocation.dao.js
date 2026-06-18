@@ -3,18 +3,12 @@ const TripLocationEntity = require('./tripLocation.entity');
 
 class LocationDao {
 
-    async save(tripId, userId, latitude, longitude, timestamp) {
+    async save(tripId, saveLocationDto) {
         const { rows } = await pool.query(
             `INSERT INTO Location (trip_id, user_id, latitude, longitude, location_timestamp)
              VALUES ($1, $2, $3, $4, $5)
                  RETURNING *`,
-            [
-                tripId,
-                userId,
-                latitude,
-                longitude,
-                timestamp
-            ]
+            [tripId, saveLocationDto.userId, saveLocationDto.latitude, saveLocationDto.longitude, saveLocationDto.locationTimestamp]
         );
         return new TripLocationEntity(rows[0]);
     }

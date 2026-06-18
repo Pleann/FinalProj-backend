@@ -15,9 +15,9 @@ class TripActivityController {
     // ── POST /trips/:tripId/activities/stops ──────────────────────────────────
     async confirmStop(req, res) {
         try {
-            const { tripId } = req.params;
-            const dto        = new ConfirmStopDto(req.body);
-            const stop       = await this.activityService.confirmStop(
+            const { tripId }                = req.params;
+            const dto         = new ConfirmStopDto(req.body);
+            const stop                      = await this.activityService.confirmStop(
                 tripId, dto.userId, dto.latitude, dto.longitude, dto.timestamp,
             );
 

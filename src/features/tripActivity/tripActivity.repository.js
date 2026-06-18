@@ -7,8 +7,8 @@ class TripActivityRepository {
 
     // ── Stop methods ──────────────────────────────────────────────────────────
 
-    async saveStop(tripId, userId, latitude, longitude, enteredAt) {
-        return this.dao.insertStop(tripId, userId, latitude, longitude, enteredAt);
+    async saveStop(tripId, confirmStopDto) {
+        return this.dao.insertStop(tripId, confirmStopDto);
     }
 
     async closeStop(stopId, exitedAt) {
@@ -29,8 +29,8 @@ class TripActivityRepository {
 
     // ── Activity methods ──────────────────────────────────────────────────────
 
-    async saveActivity(tripId, userId, locationName, locationType, activityType, startTime, endTime) {
-        return this.dao.insertActivity(tripId, userId, locationName, locationType, activityType, startTime, endTime);
+    async saveActivity(tripId, saveActivityDto) {
+        return this.dao.insertActivity(tripId, saveActivityDto);
     }
 
     async findActivitiesByTrip(tripId) {

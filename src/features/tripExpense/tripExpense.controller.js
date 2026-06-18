@@ -14,8 +14,8 @@ class TripExpenseController {
     async createExpense(req, res) {
         try {
             const { tripId } = req.params;
-            const dto        = new CreateExpenseDto(req.body);
-            const expense    = await this.expenseService.createExpense(tripId, dto);
+            const createExpenseDto        = new CreateExpenseDto(req.body);
+            const expense    = await this.expenseService.createExpense(tripId, createExpenseDto);
             res.status(201).json({
                 message: 'Expense created successfully',
                 expense: new ExpenseResponseDto(expense),

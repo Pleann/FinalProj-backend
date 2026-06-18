@@ -71,13 +71,7 @@ class LocationService {
         if (!trip) throw new Error('Trip not found');
         if (trip.trip_status !== 'Active') throw new Error('Trip is not active');
 
-        return this.locationRepo.save(
-            tripId,
-            saveLocationDto.userId,
-            saveLocationDto.latitude,
-            saveLocationDto.longitude,
-            saveLocationDto.locationTimestamp,
-        );
+        return this.locationRepo.save(tripId, saveLocationDto);
     }
 
     async getLatestLocations(tripId) {
