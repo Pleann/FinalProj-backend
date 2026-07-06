@@ -18,6 +18,12 @@ CREATE TYPE invite_status AS ENUM ('Accept', 'Reject', 'Cancelled', 'Undecided')
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+DO $$ BEGIN
+CREATE TYPE notification_type AS ENUM ('TripStarted', 'ExpensePrompt');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+
 CREATE TABLE IF NOT EXISTS Account (
                                        user_id          SERIAL PRIMARY KEY,
                                        first_name       VARCHAR(255) NOT NULL,
@@ -75,9 +81,9 @@ CREATE TABLE IF NOT EXISTS Activity (
                                           activity_id       SERIAL PRIMARY KEY,
                                           trip_id           INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
                                           user_id           INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
-                                          location_name     VARCHAR(255) NOT NULL,
-                                          location_type     VARCHAR(255) NOT NULL,
-                                          activity_type     VARCHAR(255) NOT NULL,
+                                          location_name     VARCHAR(255),
+                                          location_type     VARCHAR(255),
+                                          activity_type     VARCHAR(255),
                                           ac_start_time     TIMESTAMP NOT NULL,
                                           ac_end_time       TIMESTAMP NOT NULL,
 
@@ -91,7 +97,29 @@ CREATE TABLE IF NOT EXISTS Expense (
                                           activity_id       INTEGER REFERENCES Activity(activity_id) ON DELETE CASCADE,
                                           expense_name      VARCHAR(255) NOT NULL,
                                           amount            NUMERIC(12,2) NOT NULL,
-                                          currency          CHAR(3),
+                                          currency          VARCHAR(5),
                                           billimage_url     TEXT,
                                           expense_timestamp TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS Stop (
+                                    stop_id     SERIAL PRIMARY KEY,
+                                    trip_id     INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
+                                    user_id     INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+                                    activity_id INTEGER REFERENCES Activity(activity_id) ON DELETE SET NULL,
+                                    latitude    DECIMAL(8,6) NOT NULL,
+                                    longitude   DECIMAL(9,6) NOT NULL,
+                                    entered_at  TIMESTAMP NOT NULL,
+                                    exited_at   TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS Notification (
+                                    notification_id   SERIAL PRIMARY KEY,
+                                    user_id            INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+                                    trip_id            INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
+                                    type               notification_type NOT NULL,
+                                    message            TEXT NOT NULL,
+                                    is_read            BOOLEAN DEFAULT FALSE,
+                                    created_at         TIMESTAMP DEFAULT NOW()
+);
+
