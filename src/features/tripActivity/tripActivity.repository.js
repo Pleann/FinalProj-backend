@@ -15,6 +15,7 @@ class TripActivityRepository {
         return this.dao.updateStopExit(stopId, exitedAt);
     }
 
+
     async linkStopToActivity(stopId, activityId) {
         return this.dao.linkStopToActivity(stopId, activityId);
     }

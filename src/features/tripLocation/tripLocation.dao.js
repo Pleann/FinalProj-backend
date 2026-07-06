@@ -50,6 +50,7 @@ class LocationDao {
         return rows;
     }
 
+    //why
     async findTripById(tripId) {
         const { rows } = await pool.query(
             `SELECT trip_id, trip_name, start_time, meetup_time, meeting_point, trip_status
@@ -60,6 +61,7 @@ class LocationDao {
         return rows[0] ?? null;
     }
 
+    //no need updateTripStatus in trip.service does this
     async activateTrip(tripId) {
         const { rows } = await pool.query(
             `UPDATE Trip SET trip_status = 'Active' WHERE trip_id = $1 RETURNING *`,
@@ -69,6 +71,7 @@ class LocationDao {
         return rows[0];
     }
 
+    //member layer already has this
     async findTripMembers(tripId) {
         const { rows } = await pool.query(
             `SELECT tm.user_id, tm.attendance, a.first_name, a.last_name
@@ -81,6 +84,7 @@ class LocationDao {
         return rows;
     }
 
+    //why here and not memberLayer
     async updateAttendance(tripId, userId, attendance) {
         const { rows } = await pool.query(
             `UPDATE TripMember
@@ -93,6 +97,7 @@ class LocationDao {
         return rows[0];
     }
 
+    //why here and not memberLayer
     async findAttendanceByTrip(tripId) {
         const { rows } = await pool.query(
             `SELECT tm.user_id, a.first_name, a.last_name, tm.attendance
