@@ -5,7 +5,7 @@ class TripInviteDao {
     async insert(tripId, userId) {
         const { rows } = await pool.query(
             `INSERT INTO TripInvite (trip_id, user_id, invite_status)
-       VALUES ($1, $2, 'Accept')
+       VALUES ($1, $2, 'Undecided')
        RETURNING *`,
             [tripId, userId]
         );

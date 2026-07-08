@@ -1,6 +1,7 @@
 const LocationRepository = require('./tripLocation.repository');
 const TripMemberRepository = require('../tripMember/tripMember.repository');
 const sendNotification     = require('../../util/sendNotification');
+const ActivityService = require('../tripActivity/tripActivity.service');
 
 
 const EARTH_RADIUS_M     = 6_371_000;
@@ -33,12 +34,17 @@ class LocationService {
     constructor() {
         this.locationRepo = new LocationRepository();
         this.tripMemberRepo = new TripMemberRepository();
+        this.tripActivityService = new ActivityService();
     }
 
     async confirmStart(tripId) {
         const trip = await this.locationRepo.findTripById(tripId);
         if (!trip) throw new Error('Trip not found');
         if (trip.trip_status === 'Active') return trip; // idempotent
+
+        if (new Date(trip.meetup_time) > new Date()) {
+            return trip; // not due yet — no-op, not an error
+        }
 
         const activated = await this.locationRepo.activateTrip(tripId);
 
@@ -56,14 +62,21 @@ class LocationService {
             );
         }
 
-
         return activated;
     }
 
-    async getStart(tripId) {
-        const trip = await this.locationRepo.findTripById(tripId);
-        if (!trip) throw new Error('Trip not found');
-        return trip;
+    async findAndStartDueTrips() {
+        const dueTrips = await this.locationRepo.findDueTrips('Upcoming', new Date());
+
+        const results = await Promise.allSettled(
+            dueTrips.map(trip => this.confirmStart(trip.trip_id))
+        );
+
+        results.forEach((r, i) => {
+            if (r.status === 'rejected') {
+                console.error(`Failed to start trip ${dueTrips[i].trip_id}:`, r.reason);
+            }
+        });
     }
 
     async saveLocation(tripId, saveLocationDto) {
@@ -71,7 +84,16 @@ class LocationService {
         if (!trip) throw new Error('Trip not found');
         if (trip.trip_status !== 'Active') throw new Error('Trip is not active');
 
-        return this.locationRepo.save(tripId, saveLocationDto);
+        const location = await this.locationRepo.save(tripId, saveLocationDto);
+
+        await this.tripActivityService.confirmStop(tripId, {
+            userId:    saveLocationDto.userId,
+            latitude:  saveLocationDto.latitude,
+            longitude: saveLocationDto.longitude,
+            timestamp: saveLocationDto.locationTimestamp,
+        }).catch(err => console.error(`confirmStop failed for trip ${tripId}:`, err));
+
+        return location;
     }
 
     async getLatestLocations(tripId) {
@@ -153,10 +175,19 @@ class LocationService {
         return results;
     }
 
-    async getAttendance(tripId) {
-        const trip = await this.locationRepo.findTripById(tripId);
-        if (!trip) throw new Error('Trip not found');
-        return this.locationRepo.findAttendanceByTrip(tripId);
+    async checkDueAttendance() {
+        const windowEnd = new Date(Date.now() + 2 * 60 * MS_PER_MIN); // now + 2 hours
+        const dueTrips = await this.locationRepo.findTripsForAttendanceCheck(windowEnd);
+
+        const results = await Promise.allSettled(
+            dueTrips.map(trip => this.evaluateAttendance(trip.trip_id))
+        );
+
+        results.forEach((r, i) => {
+            if (r.status === 'rejected') {
+                console.error(`Failed to evaluate attendance for trip ${dueTrips[i].trip_id}:`, r.reason);
+            }
+        });
     }
 }
 

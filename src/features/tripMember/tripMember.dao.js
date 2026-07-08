@@ -10,14 +10,15 @@ class TripMemberDao {
         return rows.map(row => new TripMemberEntity(row));
     }
 
-    async findById(participantId) {
-        const { rows } = await pool.query(
-            `SELECT * FROM TripMember WHERE participant_id = $1`,
-            [participantId]
-        );
-        if (rows.length === 0) throw new Error('Member not found');
-        return new TripMemberEntity(rows[0]);
-    }
+    //might no longer use
+    // async findById(participantId) {
+    //     const { rows } = await pool.query(
+    //         `SELECT * FROM TripMember WHERE participant_id = $1`,
+    //         [participantId]
+    //     );
+    //     if (rows.length === 0) throw new Error('Member not found');
+    //     return new TripMemberEntity(rows[0]);
+    // }
 
     async updateStatus(participantId, memberStatus) {
         const { rows } = await pool.query(

@@ -1,8 +1,8 @@
 class ConfirmStopDto {
     constructor({ userId, latitude, longitude, timestamp }) {
         if (!userId)    throw new Error('userId is required');
-        if (!latitude)  throw new Error('latitude is required');
-        if (!longitude) throw new Error('longitude is required');
+        if (latitude === undefined || latitude === null)  throw new Error('latitude is required');
+        if (longitude === undefined || longitude === null) throw new Error('longitude is required');
 
         this.userId    = userId;
         this.latitude  = parseFloat(latitude);

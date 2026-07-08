@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS Stop (
                                     latitude    DECIMAL(8,6) NOT NULL,
                                     longitude   DECIMAL(9,6) NOT NULL,
                                     entered_at  TIMESTAMP NOT NULL,
-                                    exited_at   TIMESTAMP
+                                    exited_at   TIMESTAMP NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Notification (

@@ -9,13 +9,16 @@ class LocationRepository {
         return this.dao.save(tripId, saveLocationDto);
     }
 
-    //keep for latrer
-    async findByTrip(tripId) {
-        return this.dao.findByTrip(tripId);
+    async findDueTrips(status, beforeTime) {
+        return this.dao.findDueTrips(status, beforeTime);
     }
 
     async findByUser(userId, tripId) {
         return this.dao.findByUser(userId, tripId);
+    }
+
+    async findTripsForAttendanceCheck(beforeTime) {
+        return this.dao.findTripsForAttendanceCheck(beforeTime);
     }
 
     async findLatestPerMember(tripId) {
@@ -36,10 +39,6 @@ class LocationRepository {
 
     async updateAttendance(tripId, userId, attendance) {
         return this.dao.updateAttendance(tripId, userId, attendance);
-    }
-
-    async findAttendanceByTrip(tripId) {
-        return this.dao.findAttendanceByTrip(tripId);
     }
 }
 

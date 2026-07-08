@@ -9,9 +9,10 @@ class TripMemberRepository {
         return this.dao.findByTrip(tripId);
     }
 
-    async findById(participantId) {
-        return this.dao.findById(participantId);
-    }
+    //might no longer use
+    // async findById(participantId) {
+    //     return this.dao.findById(participantId);
+    // }
 
     async updateStatus(participantId, memberStatus) {
         return this.dao.updateStatus(participantId, memberStatus);

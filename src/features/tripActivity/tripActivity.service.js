@@ -45,9 +45,9 @@ class TripActivityService {
 
     async confirmStop(tripId, confirmStopDto) {
         const { userId, latitude, longitude, timestamp } = confirmStopDto;
-        const key                                  = `${userId}_${tripId}`;
-        const now                                  = new Date(timestamp);
-        const pending                                    = this.pendingStops[key];
+        const key     = `${userId}_${tripId}`;
+        const now     = new Date(timestamp);
+        const pending = this.pendingStops[key];
 
         if (pending) {
             const dist = haversineDistance(
@@ -56,44 +56,30 @@ class TripActivityService {
             );
 
             if (dist <= STOP_RADIUS_M) {
-                // Still within radius — check if minimum time has elapsed
-                const elapsed = now - new Date(pending.enteredAt);
+                const elapsed = now - pending.enteredAt;
                 if (elapsed >= STOP_MIN_MS) {
-                    // Stop confirmed — close it and enrich with Google Places
-                    const stop = await this.activityRepo.closeStop(pending.stopId, now);
+                    // Confirmed — single insert with both entered_at and exited_at
+                    const stop = await this.activityRepo.saveStop(tripId, {
+                        userId,
+                        latitude:  pending.latitude,
+                        longitude: pending.longitude,
+                        enteredAt: pending.enteredAt,
+                        exitedAt:  now,
+                    });
                     delete this.pendingStops[key];
-                    // Fire and forget enrichment so we don't block the response
                     this.createActivityFromStop(stop).catch(console.error);
                     return stop;
                 }
-                // Still waiting — not confirmed yet
-                return null;
+                return null; // still waiting, in-memory only
             } else {
-                // Left the radius before minimum time — discard pending stop
+                // Left radius before confirming — discard, no DB row was ever created
                 delete this.pendingStops[key];
             }
         }
 
-        // Start tracking a new potential stop
-        const newStop = await this.activityRepo.saveStop(tripId, confirmStopDto);
-        this.pendingStops[key] = {
-            stopId:    newStop.stopId,
-            latitude,
-            longitude,
-            enteredAt: now,
-        };
+        // Start tracking a new candidate — in memory only, no DB write yet
+        this.pendingStops[key] = { latitude, longitude, enteredAt: now };
         return null;
-    }
-
-    async getStops(tripId) {
-        if (!tripId) throw new Error('Could not fetch stop by tripId')
-        return this.activityRepo.findStopsByTrip(tripId);
-    }
-
-    async detectPlaceType(latitude, longitude) {
-        const result = await this.callGooglePlacesAPI(latitude, longitude);
-        if (!result) throw new Error('Could not fetch placeType')
-        return result;
     }
 
     async createActivityFromStop(stop) {
@@ -115,25 +101,18 @@ class TripActivityService {
         // Link stop → activity
         await this.activityRepo.linkStopToActivity(stop.stopId, activity.activityId);
 
-        await sendNotification(
-            [stop.userId],
-            stop.tripId,
-            'ExpensePrompt',
-            `You stopped at ${activity.locationName}. Don't forget to log any expenses!`,
-        );
+        // await sendNotification(
+        //     [stop.userId],
+        //     stop.tripId,
+        //     'ExpensePrompt',
+        //     `You stopped at ${activity.locationName}. Don't forget to log any expenses!`,
+        // );
 
         return activity;
     }
 
     async getTimeline(tripId) {
         return this.activityRepo.findActivitiesByTrip(tripId);
-    }
-
-    async getActivityByStop(stopId) {
-        const stop = await this.activityRepo.findStopById(stopId);
-        if (!stop) throw new Error('Stop not found');
-        if (!stop.activityId) throw new Error('No activity linked to this stop yet');
-        return this.activityRepo.findActivityById(stop.activityId);
     }
 
     //review this

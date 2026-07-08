@@ -13,6 +13,16 @@ class LocationDao {
         return new TripLocationEntity(rows[0]);
     }
 
+    async findDueTrips(status, beforeTime) {
+        const { rows } = await pool.query(
+            `SELECT trip_id, trip_name, start_time, meetup_time, meeting_point, trip_status
+         FROM   Trip
+         WHERE  trip_status = $1 AND meetup_time <= $2`,
+            [status, beforeTime]
+        );
+        return rows;
+    }
+
     async findByTrip(tripId) {
         const { rows } = await pool.query(
             `SELECT * FROM Location WHERE trip_id = $1 ORDER BY location_timestamp ASC`,
@@ -29,6 +39,17 @@ class LocationDao {
             [tripId, userId]
         );
         return rows.map(row => new TripLocationEntity(row));
+    }
+
+    async findTripsForAttendanceCheck(beforeTime) {
+        const { rows } = await pool.query(
+            `SELECT trip_id, trip_name, meetup_time, meeting_point, trip_status
+         FROM   Trip
+         WHERE  trip_status IN ('Upcoming', 'Active')
+           AND  meetup_time <= $1`,
+            [beforeTime]
+        );
+        return rows;
     }
 
     //review this soon
@@ -95,20 +116,6 @@ class LocationDao {
         );
         if (rows.length === 0) throw new Error('TripMember not found');
         return rows[0];
-    }
-
-    //why here and not memberLayer
-    async findAttendanceByTrip(tripId) {
-        const { rows } = await pool.query(
-            `SELECT tm.user_id, a.first_name, a.last_name, tm.attendance
-             FROM   TripMember tm
-                        JOIN   Account    a ON a.user_id = tm.user_id
-             WHERE  tm.trip_id = $1
-               AND  tm.member_status = 'Participating'
-             ORDER  BY a.last_name, a.first_name`,
-            [tripId]
-        );
-        return rows;
     }
 }
 
