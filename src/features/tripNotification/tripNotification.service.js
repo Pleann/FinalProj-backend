@@ -9,17 +9,17 @@ class tripNotificationService {
         return this.tripnotificationRepo.findByUser(userId);
     }
 
-    async getUnreadNotifications(userId) {
-        return this.tripnotificationRepo.findUnreadByUser(userId);
-    }
-
-    async markAsRead(notificationId) {
-        return this.tripnotificationRepo.markAsRead(notificationId);
-    }
-
-    async markAllAsRead(userId) {
-        return this.tripnotificationRepo.markAllAsRead(userId);
-    }
+    // async getUnreadNotifications(userId) {
+    //     return this.tripnotificationRepo.findUnreadByUser(userId);
+    // }
+    //
+    // async markAsRead(notificationId) {
+    //     return this.tripnotificationRepo.markAsRead(notificationId);
+    // }
+    //
+    // async markAllAsRead(userId) {
+    //     return this.tripnotificationRepo.markAllAsRead(userId);
+    // }
 
     async deleteNotification(notificationId) {
         return this.tripnotificationRepo.delete(notificationId);

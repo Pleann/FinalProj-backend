@@ -23,14 +23,6 @@ class LocationDao {
         return rows;
     }
 
-    async findByTrip(tripId) {
-        const { rows } = await pool.query(
-            `SELECT * FROM Location WHERE trip_id = $1 ORDER BY location_timestamp ASC`,
-            [tripId]
-        );
-        return rows.map(row => new TripLocationEntity(row));
-    }
-
     async findByUser(userId, tripId) {
         const { rows } = await pool.query(
             `SELECT * FROM Location

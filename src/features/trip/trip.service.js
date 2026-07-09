@@ -14,11 +14,11 @@ class TripService {
         return this.tripRepo.save(createTripDto, ownerId);
     }
 
-    async getAllTrips() {
-        const trips = await this.tripRepo.findAll();
-        if (!trips) throw new Error('Could not find all trips');
-        return trips;
-    }
+    // async getAllTrips() {
+    //     const trips = await this.tripRepo.findAll();
+    //     if (!trips) throw new Error('Could not find all trips');
+    //     return trips;
+    // }
 
     async getUpcomingTrips() {
         const trips = await this.tripRepo.findUpcoming();

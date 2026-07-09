@@ -21,15 +21,6 @@ class TripController {
         }
     }
 
-    async getAllTrips(req, res) {
-        try {
-            const trips = await this.tripService.getAllTrips();
-            res.status(200).json(trips.map(trip => new TripResponseDto(trip)));
-        } catch (err) {
-            res.status(500).json({ error: err.message });
-        }
-    }
-
     async getUpcomingTrips(req, res) {
         try {
             const trips = await this.tripService.getUpcomingTrips();

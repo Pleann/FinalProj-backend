@@ -20,10 +20,10 @@ class TripDao {
         );
         return new TripEntity(rows[0]);
     }
-    async findAll() {
-        const { rows } = await pool.query(`SELECT * FROM trip`);
-        return rows.map(row => new TripEntity(row));
-    }
+    // async findAll() {
+    //     const { rows } = await pool.query(`SELECT * FROM trip`);
+    //     return rows.map(row => new TripEntity(row));
+    // }
 
     async findByStatus(status) {
         const { rows } = await pool.query(

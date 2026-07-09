@@ -9,9 +9,9 @@ class TripRepository {
         return this.dao.insert(tripDto, ownerId);
     }
 
-    async findAll() {
-        return this.dao.findAll();
-    }
+    // async findAll() {
+    //     return this.dao.findAll();
+    // }
 
     async findUpcoming() {
         return this.dao.findByStatus('Upcoming');
