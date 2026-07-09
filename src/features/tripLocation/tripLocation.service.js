@@ -1,7 +1,7 @@
-const LocationRepository = require('./tripLocation.repository');
-const TripMemberRepository = require('../tripMember/tripMember.repository');
 const sendNotification     = require('../../util/sendNotification');
 const ActivityService = require('../tripActivity/tripActivity.service');
+const LocationDao = require("./tripLocation.dao");
+const MemberDao = require("../tripMember/tripMember.dao")
 
 
 const EARTH_RADIUS_M     = 6_371_000;
@@ -32,13 +32,13 @@ function classifyAttendance(deltaMs) {
 
 class LocationService {
     constructor() {
-        this.locationRepo = new LocationRepository();
-        this.tripMemberRepo = new TripMemberRepository();
+        this.locationDao = new LocationDao();
+        this.memberDao = new MemberDao();
         this.tripActivityService = new ActivityService();
     }
 
     async confirmStart(tripId) {
-        const trip = await this.locationRepo.findTripById(tripId);
+        const trip = await this.locationDao.findTripById(tripId);
         if (!trip) throw new Error('Trip not found');
         if (trip.trip_status === 'Active') return trip; // idempotent
 
@@ -46,9 +46,9 @@ class LocationService {
             return trip; // not due yet — no-op, not an error
         }
 
-        const activated = await this.locationRepo.activateTrip(tripId);
+        const activated = await this.locationDao.activateTrip(tripId);
 
-        const members = await this.tripMemberRepo.findByTrip(tripId);
+        const members = await this.memberDao.findByTrip(tripId);
         const userIds = members
             .filter(m => m.member_status === 'Participating')
             .map(m => m.user_id);
@@ -66,7 +66,7 @@ class LocationService {
     }
 
     async findAndStartDueTrips() {
-        const dueTrips = await this.locationRepo.findDueTrips('Upcoming', new Date());
+        const dueTrips = await this.locationDao.findDueTrips('Upcoming', new Date());
 
         const results = await Promise.allSettled(
             dueTrips.map(trip => this.confirmStart(trip.trip_id))
@@ -80,11 +80,11 @@ class LocationService {
     }
 
     async saveLocation(tripId, saveLocationDto) {
-        const trip = await this.locationRepo.findTripById(tripId);
+        const trip = await this.locationDao.findTripById(tripId);
         if (!trip) throw new Error('Trip not found');
         if (trip.trip_status !== 'Active') throw new Error('Trip is not active');
 
-        const location = await this.locationRepo.save(tripId, saveLocationDto);
+        const location = await this.locationDao.save(tripId, saveLocationDto);
 
         await this.tripActivityService.confirmStop(tripId, {
             userId:    saveLocationDto.userId,
@@ -97,18 +97,18 @@ class LocationService {
     }
 
     async getLatestLocations(tripId) {
-        const trip = await this.locationRepo.findTripById(tripId);
+        const trip = await this.locationDao.findTripById(tripId);
         if (!trip) throw new Error('Trip not found');
         if (trip.trip_status !== 'Active') throw new Error('Trip is not active');
 
-        return this.locationRepo.findLatestPerMember(tripId);
+        return this.locationDao.findLatestPerMember(tripId);
     }
 
     async evaluateAttendance(tripId) {
-        const trip = await this.locationRepo.findTripById(tripId);
+        const trip = await this.locationDao.findTripById(tripId);
         if (!trip) throw new Error('Trip not found');
 
-        const members        = await this.locationRepo.findTripMembers(tripId);
+        const members        = await this.locationDao.findTripMembers(tripId);
         const startTime      = new Date(trip.start_time);
         const hasMeetingPoint = Boolean(trip.meeting_point);
 
@@ -120,7 +120,7 @@ class LocationService {
         const results = [];
 
         for (const member of members) {
-            const locations = await this.locationRepo.findByUser(member.user_id, tripId);
+            const locations = await this.locationDao.findByUser(member.user_id, tripId);
             let arrivalTime = null;
 
             if (hasMeetingPoint) {
@@ -142,7 +142,7 @@ class LocationService {
 
                     for (const other of members) {
                         if (other.user_id === member.user_id) continue;
-                        const otherLocs = await this.locationRepo.findByUser(other.user_id, tripId);
+                        const otherLocs = await this.locationDao.findByUser(other.user_id, tripId);
                         const contemporaneous = otherLocs
                             .filter(ol => new Date(ol.locationTimestamp) <= new Date(loc.locationTimestamp))
                             .at(-1);
@@ -168,7 +168,7 @@ class LocationService {
                 ? classifyAttendance(arrivalTime.getTime() - startTime.getTime())
                 : 'Missing';
 
-            const updated = await this.locationRepo.updateAttendance(tripId, member.user_id, attendance);
+            const updated = await this.locationDao.updateAttendance(tripId, member.user_id, attendance);
             results.push({ ...updated, first_name: member.first_name, last_name: member.last_name });
         }
 
@@ -177,7 +177,7 @@ class LocationService {
 
     async checkDueAttendance() {
         const windowEnd = new Date(Date.now() + 2 * 60 * MS_PER_MIN); // now + 2 hours
-        const dueTrips = await this.locationRepo.findTripsForAttendanceCheck(windowEnd);
+        const dueTrips = await this.locationDao.findTripsForAttendanceCheck(windowEnd);
 
         const results = await Promise.allSettled(
             dueTrips.map(trip => this.evaluateAttendance(trip.trip_id))

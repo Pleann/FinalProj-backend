@@ -1,4 +1,4 @@
-const TripActivityRepository = require('./tripActivity.repository');
+const TripActivityDao = require('./tripActivity.dao');
 const sendNotification = require('../../util/sendNotification');
 
 const STOP_RADIUS_M    = 500;
@@ -35,7 +35,7 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 
 class TripActivityService {
     constructor() {
-        this.activityRepo  = new TripActivityRepository();
+        this.dao = new TripActivityDao();
         this.placesApiKey  = process.env.GOOGLE_PLACES_API_KEY;
 
         // In-memory tracker for pending stops (not yet confirmed)
@@ -59,7 +59,7 @@ class TripActivityService {
                 const elapsed = now - pending.enteredAt;
                 if (elapsed >= STOP_MIN_MS) {
                     // Confirmed — single insert with both entered_at and exited_at
-                    const stop = await this.activityRepo.saveStop(tripId, {
+                    const stop = await this.dao.insertStop(tripId, {
                         userId,
                         latitude:  pending.latitude,
                         longitude: pending.longitude,
@@ -88,18 +88,17 @@ class TripActivityService {
             parseFloat(stop.longitude)
         );
 
-        const activity = await this.activityRepo.saveActivity(stop.tripId, {
-                userId: stop.userId,
-                locationName: placeData.locationName,
-                locationType: placeData.locationType,
-                activityType: deriveActivityType(placeData.types),
-                startTime: stop.enteredAt,
-                endTime: stop.exitedAt,
-            }
-        );
+        const activity = await this.dao.insertActivity(stop.tripId, {
+            userId: stop.userId,
+            locationName: placeData.locationName,
+            locationType: placeData.locationType,
+            activityType: deriveActivityType(placeData.types),
+            startTime: stop.enteredAt,
+            endTime: stop.exitedAt,
+        });
 
         // Link stop → activity
-        await this.activityRepo.linkStopToActivity(stop.stopId, activity.activityId);
+        await this.dao.linkStopToActivity(stop.stopId, activity.activityId);
 
         // await sendNotification(
         //     [stop.userId],
@@ -112,7 +111,7 @@ class TripActivityService {
     }
 
     async getTimeline(tripId) {
-        return this.activityRepo.findActivitiesByTrip(tripId);
+        return this.dao.findActivitiesByTrip(tripId);
     }
 
     //review this

@@ -1,14 +1,14 @@
-const TripMemberRepository = require('./tripMember.repository');
+const TripMemberDao = require('./tripMember.dao');
 const pool = require('../../config/db');
 
 class TripMemberService {
     constructor() {
-        this.memberRepo = new TripMemberRepository();
+        this.Dao = new TripMemberDao()
     }
 
     async getMembersByTrip(tripId) {
         if (!tripId) throw new Error('Could not fetch member by tripId')
-        return this.memberRepo.findByTrip(tripId);
+        return this.Dao.findByTrip(tripId);
     }
 
     async updateMemberStatus(tripId, participantId, updateTripMemberDto, ownerId) {
@@ -20,7 +20,7 @@ class TripMemberService {
         if (rows[0].created_by !== ownerId) throw new Error('Only the trip owner can edit members');
         if (rows[0].trip_status !== 'Upcoming') throw new Error('Can only edit members of Upcoming trips');
 
-        return this.memberRepo.updateStatus(participantId, updateTripMemberDto.memberStatus);
+        return this.Dao.updateStatus(participantId, updateTripMemberDto.memberStatus);
     }
 
     async removeMember(tripId, participantId, ownerId) {
@@ -32,7 +32,7 @@ class TripMemberService {
         if (rows[0].created_by !== ownerId) throw new Error('Only the trip owner can remove members');
         if (rows[0].trip_status !== 'Upcoming') throw new Error('Can only remove members from Upcoming trips');
 
-        return this.memberRepo.delete(participantId);
+        return this.Dao.delete(participantId);
     }
 }
 

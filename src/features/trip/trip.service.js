@@ -1,9 +1,9 @@
-const TripRepository = require('./trip.repository');
 const uploadImage = require('../../util/uploadImage');
+const TripDao = require("./trip.dao");
 
 class TripService {
     constructor() {
-        this.tripRepo = new TripRepository();
+        this.dao = new TripDao();
     }
 
     async createTrip(createTripDto, ownerId, file) {
@@ -11,7 +11,7 @@ class TripService {
         if (file) {
             createTripDto.imageUrl = await uploadImage(file);
         }
-        return this.tripRepo.save(createTripDto, ownerId);
+        return this.dao.insert(createTripDto, ownerId);
     }
 
     // async getAllTrips() {
@@ -21,19 +21,19 @@ class TripService {
     // }
 
     async getUpcomingTrips() {
-        const trips = await this.tripRepo.findUpcoming();
+        const trips = await this.dao.findByStatus('Upcoming');
         if (!trips) throw new Error('Could not find upcoming trips');
         return trips;
     }
 
     async getActiveTrips() {
-        const trips = await this.tripRepo.findActive();
+        const trips = await this.dao.findByStatus('Active');
         if (!trips) throw new Error('Could not find Active trips');
         return trips;
     }
 
     async getCompletedTrips() {
-        const trips = await this.tripRepo.findCompleted();
+        const trips = await this.dao.findByStatus('Completed');
         if (!trips) throw new Error('Could not find completed trips');
         return trips;
     }
@@ -63,7 +63,7 @@ class TripService {
             throw new Error('No fields provided to update');
         }
 
-        return this.tripRepo.update(tripId, fields);
+        return this.dao.update(tripId, fields);
     }
 
     async updateTripStatus(tripId, status) {
@@ -71,12 +71,12 @@ class TripService {
         if (!validStatuses.includes(status)) {
             throw new Error('Invalid status. Must be Upcoming, Active or Completed');
         }
-        return this.tripRepo.update(tripId, { trip_status: status });
+        return this.dao.update(tripId, { trip_status: status });
     }
 
     async deleteTrip(tripId) {
         if (!tripId) throw new Error('Could not find trip ID')
-        return this.tripRepo.delete(tripId);
+        return this.dao.delete(tripId);
     }
 }
 

@@ -1,12 +1,12 @@
-const tripNotificationRepository = require('./tripNotification.repository');
+const tripNotificationDao = require('./tripNotification.dao');
 
 class tripNotificationService {
     constructor() {
-        this.tripnotificationRepo = new tripNotificationRepository();
+        this.dao = new tripNotificationDao();
     }
 
     async getNotifications(userId) {
-        return this.tripnotificationRepo.findByUser(userId);
+        return this.dao.findByUser(userId);
     }
 
     // async getUnreadNotifications(userId) {
@@ -22,7 +22,7 @@ class tripNotificationService {
     // }
 
     async deleteNotification(notificationId) {
-        return this.tripnotificationRepo.delete(notificationId);
+        return this.dao.delete(notificationId);
     }
 }
 

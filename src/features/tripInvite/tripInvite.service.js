@@ -1,9 +1,9 @@
-const TripInviteRepository = require('./tripInvite.repository');
+const TripInviteDao = require('./tripInvite.dao');
 const pool = require('../../config/db');
 
 class TripInviteService {
     constructor() {
-        this.inviteRepo = new TripInviteRepository();
+        this.dao = new TripInviteDao();
     }
 
     async sendInvite(tripId, createTripInviteDto, ownerId) {
@@ -15,16 +15,16 @@ class TripInviteService {
         if (rows[0].created_by !== ownerId) throw new Error('Only the trip owner can send invites');
         if (rows[0].trip_status !== 'Upcoming') throw new Error('Can only invite members to Upcoming trips');
 
-        return this.inviteRepo.save(tripId, createTripInviteDto.userId);
+        return this.dao.insert(tripId, createTripInviteDto.userId);
     }
 
     async getInvitesByTrip(tripId) {
         if (!tripId) throw new Error('Could not fetch invite by tripId')
-        return this.inviteRepo.findByTrip(tripId);
+        return this.dao.findByTrip(tripId);
     }
 
     async respondToInvite(tripInviteId, updateTripInviteDto) {
-        const invite = await this.inviteRepo.findById(tripInviteId);
+        const invite = await this.dao.findById(tripInviteId);
 
         // If accepted, add to TripMember
         if (updateTripInviteDto.inviteStatus === 'Accept') {
@@ -36,7 +36,7 @@ class TripInviteService {
             );
         }
 
-        return this.inviteRepo.updateStatus(tripInviteId, updateTripInviteDto.inviteStatus);
+        return this.dao.updateStatus(tripInviteId, updateTripInviteDto.inviteStatus);
     }
 }
 
