@@ -42,7 +42,7 @@ class LocationService {
         if (!trip) throw new Error('Trip not found');
         if (trip.trip_status === 'Active') return trip; // idempotent
 
-        if (new Date(trip.meetup_time) > new Date()) {
+        if (new Date(trip.start_time) > new Date()) {
             return trip; // not due yet — no-op, not an error
         }
 
@@ -109,12 +109,13 @@ class LocationService {
         if (!trip) throw new Error('Trip not found');
 
         const members        = await this.locationDao.findTripMembers(tripId);
-        const startTime      = new Date(trip.start_time);
-        const hasMeetingPoint = Boolean(trip.meeting_point);
+        const startDate      = new Date(trip.start_date);
+        const hasMeetingPoint = trip.meeting_point_lat != null && trip.meeting_point_lon != null;
 
         let mpLat, mpLon;
         if (hasMeetingPoint) {
-            [mpLat, mpLon] = trip.meeting_point.split(',').map(Number);
+            mpLat = trip.meeting_point_lat;
+            mpLon = trip.meeting_point_lon;
         }
 
         const results = [];
@@ -165,7 +166,7 @@ class LocationService {
             }
 
             const attendance = arrivalTime
-                ? classifyAttendance(arrivalTime.getTime() - startTime.getTime())
+                ? classifyAttendance(arrivalTime.getTime() - startDate.getTime())
                 : 'Missing';
 
             const updated = await this.locationDao.updateAttendance(tripId, member.user_id, attendance);

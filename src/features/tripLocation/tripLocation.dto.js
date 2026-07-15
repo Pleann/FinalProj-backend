@@ -46,8 +46,8 @@ class TripStartResponseDto {
     constructor(trip) {
         this.tripId      = trip.trip_id;
         this.tripName    = trip.trip_name;
-        this.startTime   = trip.start_time;
-        this.meetupTime  = trip.meetup_time;
+        this.startDate   = trip.start_date;
+        this.startTime  = trip.start_time;
         this.meetingPoint = trip.meeting_point;
         this.tripStatus  = trip.trip_status;
     }

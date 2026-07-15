@@ -21,6 +21,16 @@ class TripController {
         }
     }
 
+    async getTripById(req, res) {
+        try {
+            const { tripId } = req.params;
+            const trip = await this.tripService.getTripById(tripId);
+            res.status(200).json(new TripResponseDto(trip));
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    }
+
     async getUpcomingTrips(req, res) {
         try {
             const trips = await this.tripService.getUpcomingTrips();

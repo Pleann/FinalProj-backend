@@ -20,6 +20,12 @@ class TripService {
     //     return trips;
     // }
 
+    async getTripById(tripId) {
+        const trips = await this.dao.findById(tripId);
+        if (!trips) throw new Error('Could not find trip ID');
+        return trips;
+    }
+
     async getUpcomingTrips() {
         const trips = await this.dao.findByStatus('Upcoming');
         if (!trips) throw new Error('Could not find upcoming trips');
@@ -42,15 +48,17 @@ class TripService {
         const fields = {};
 
         if (body.tripName)        fields.trip_name        = body.tripName.trim();
-        if (body.startTime)       fields.start_time       = body.startTime;
-        if (body.endTime)         fields.end_time         = body.endTime;
+        if (body.startDate)       fields.start_date       = body.startTime;
+        if (body.endDate)         fields.end_date         = body.endTime;
         if (body.tripDestination) fields.trip_destination = body.tripDestination.trim();
-        if (body.meetingPoint)    fields.meeting_point    = body.meetingPoint.trim();
-        if (body.meetUpTime)      fields.meetup_time      = body.meetUpTime;
+        if (body.meetingPointName)    fields.meeting_point_name    = body.meetingPointName.trim();
+        if (body.meetingPointLat)     fields.meeting_point_lat     = body.meetingPointLat;
+        if (body.meetingPointLon)     fields.meeting_point_lon     = body.meetingPointLon;
+        if (body.startTime)      fields.start_time        = body.startTime;
 
-        // Validate dates only if both are provided
-        if (fields.start_time && fields.end_time) {
-            if (new Date(fields.start_time) > new Date(fields.end_time)) {
+        // Validate dates only if both are provide
+        if (fields.start_date && fields.end_date) {
+            if (new Date(fields.start_date) > new Date(fields.end_date)) {
                 throw new Error('Start date must be before end date');
             }
         }

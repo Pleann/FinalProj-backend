@@ -1,4 +1,5 @@
 const TripInviteDao = require('./tripInvite.dao');
+const sendNotification = require('../../util/sendNotification');
 const pool = require('../../config/db');
 
 class TripInviteService {
@@ -7,7 +8,6 @@ class TripInviteService {
     }
 
     async sendInvite(tripId, createTripInviteDto, ownerId) {
-        // Verify trip exists and requester is the owner
         const { rows } = await pool.query(
             `SELECT * FROM Trip WHERE trip_id = $1`, [tripId]
         );
@@ -15,7 +15,17 @@ class TripInviteService {
         if (rows[0].created_by !== ownerId) throw new Error('Only the trip owner can send invites');
         if (rows[0].trip_status !== 'Upcoming') throw new Error('Can only invite members to Upcoming trips');
 
-        return this.dao.insert(tripId, createTripInviteDto.userId);
+        const invite = await this.dao.insert(tripId, createTripInviteDto.userId);
+
+        await sendNotification(
+            [createTripInviteDto.userId],
+            tripId,
+            'TripInvite',
+            `You've been invited to "${rows[0].trip_name}"`,
+            invite.tripInviteId,
+        );
+
+        return invite;
     }
 
     async getInvitesByTrip(tripId) {

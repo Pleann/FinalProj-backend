@@ -6,7 +6,11 @@ class tripNotificationService {
     }
 
     async getNotifications(userId) {
-        return this.dao.findByUser(userId);
+        try {
+            return await this.dao.findByUser(userId);
+        } catch (error) {
+            throw new Error(`Failed to fetch notifications for user ${userId}: ${error.message}`);
+        }
     }
 
     // async getUnreadNotifications(userId) {
@@ -22,7 +26,11 @@ class tripNotificationService {
     // }
 
     async deleteNotification(notificationId) {
-        return this.dao.delete(notificationId);
+        try {
+            return await this.dao.delete(notificationId);
+        } catch (error) {
+            throw new Error(`Failed to delete notification ${notificationId}: ${error.message}`);
+        }
     }
 }
 

@@ -3,8 +3,6 @@ const {
     SaveLocationDto,
     LocationResponseDto,
     LatestLocationResponseDto,
-    AttendanceResponseDto,
-    TripStartResponseDto,
 } = require('./tripLocation.dto');
 
 class LocationController {

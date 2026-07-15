@@ -15,9 +15,9 @@ class LocationDao {
 
     async findDueTrips(status, beforeTime) {
         const { rows } = await pool.query(
-            `SELECT trip_id, trip_name, start_time, meetup_time, meeting_point, trip_status
+            `SELECT trip_id, trip_name, start_date, start_time, meeting_point_name, trip_status
          FROM   Trip
-         WHERE  trip_status = $1 AND meetup_time <= $2`,
+         WHERE  trip_status = $1 AND start_time <= $2`,
             [status, beforeTime]
         );
         return rows;
@@ -35,10 +35,10 @@ class LocationDao {
 
     async findTripsForAttendanceCheck(beforeTime) {
         const { rows } = await pool.query(
-            `SELECT trip_id, trip_name, meetup_time, meeting_point, trip_status
+            `SELECT trip_id, trip_name, start_time, meeting_point_name, trip_status
          FROM   Trip
          WHERE  trip_status IN ('Upcoming', 'Active')
-           AND  meetup_time <= $1`,
+           AND  start_time <= $1`,
             [beforeTime]
         );
         return rows;
@@ -66,7 +66,7 @@ class LocationDao {
     //why
     async findTripById(tripId) {
         const { rows } = await pool.query(
-            `SELECT trip_id, trip_name, start_time, meetup_time, meeting_point, trip_status
+            `SELECT trip_id, trip_name, start_date, start_time, meeting_point_name, trip_status
              FROM   Trip
              WHERE  trip_id = $1`,
             [tripId]

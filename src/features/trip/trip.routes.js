@@ -8,6 +8,7 @@ const tripController = new TripController();
 // router.get('/', (req, res) => tripController.getAllTrips(req, res));
 router.post('/', upload.single('image'), (req, res) => tripController.createTrip(req, res));
 router.patch('/:tripId', upload.single('image'), (req, res) => tripController.updateTrip(req, res));
+router.get('/:tripId', (req, res) => tripController.getTripById(req, res));
 router.get('/status/upcoming', (req, res) => tripController.getUpcomingTrips(req, res));
 router.get('/status/active', (req, res) => tripController.getActiveTrips(req, res));
 router.get('/status/completed', (req, res) => tripController.getCompletedTrips(req, res));

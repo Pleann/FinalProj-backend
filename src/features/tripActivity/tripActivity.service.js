@@ -83,10 +83,15 @@ class TripActivityService {
     }
 
     async createActivityFromStop(stop) {
-        const placeData = await this.callGooglePlacesAPI(
-            parseFloat(stop.latitude),
-            parseFloat(stop.longitude)
-        );
+        let placeData;
+        try {
+            placeData = await this.callGooglePlacesAPI(
+                parseFloat(stop.latitude),
+                parseFloat(stop.longitude)
+            );
+        } catch (error) {
+            throw new Error(`Failed to fetch place data for stop ${stop.stopId}: ${error.message}`);
+        }
 
         const activity = await this.dao.insertActivity(stop.tripId, {
             userId: stop.userId,
@@ -97,8 +102,12 @@ class TripActivityService {
             endTime: stop.exitedAt,
         });
 
-        // Link stop → activity
-        await this.dao.linkStopToActivity(stop.stopId, activity.activityId);
+        try {
+            // Link stop → activity
+            await this.dao.linkStopToActivity(stop.stopId, activity.activityId);
+        } catch (error) {
+            throw new Error(`Failed to link stop ${stop.stopId} to activity ${activity.activityId}: ${error.message}`);
+        }
 
         // await sendNotification(
         //     [stop.userId],

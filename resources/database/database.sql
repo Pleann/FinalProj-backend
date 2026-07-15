@@ -19,7 +19,7 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-CREATE TYPE notification_type AS ENUM ('TripStarted', 'ExpensePrompt');
+CREATE TYPE notification_type AS ENUM ('TripStarted', 'Invite');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -37,16 +37,18 @@ CREATE TABLE IF NOT EXISTS Account (
 CREATE TABLE IF NOT EXISTS Trip (
                                     trip_id          SERIAL PRIMARY KEY,
                                     trip_name        VARCHAR(255) NOT NULL,
-                                    start_time       TIMESTAMP NOT NULL,
-                                    end_time         TIMESTAMP NOT NULL,
-                                    meetup_time      TIMESTAMP,
+                                    start_date       TIMESTAMP NOT NULL,
+                                    end_date         TIMESTAMP NOT NULL,
+                                    start_time       TIMESTAMP,
                                     trip_destination VARCHAR(255) NOT NULL,
-                                    meeting_point    VARCHAR(255),
+                                    meeting_point_name VARCHAR(255),
+                                    meeting_point_lat  NUMERIC(8,6),
+                                    meeting_point_lon  NUMERIC(9,6),
                                     image_url        TEXT,
                                     trip_status      trip_status default 'Upcoming',
                                     created_by       INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE SET NULL,
 
-                                    CONSTRAINT chk_dates CHECK (start_time <= end_time)
+                                    CONSTRAINT chk_dates CHECK (start_date <= end_date)
 );
 
 CREATE TABLE IF NOT EXISTS TripMember (
@@ -117,8 +119,9 @@ CREATE TABLE IF NOT EXISTS Notification (
                                     notification_id   SERIAL PRIMARY KEY,
                                     user_id            INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
                                     trip_id            INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
-                                    type               notification_type NOT NULL,
+                                    title              TEXT NOT NULL,
                                     message            TEXT NOT NULL,
+                                    reference_id       INTEGER,
                                     is_read            BOOLEAN DEFAULT FALSE,
                                     created_at         TIMESTAMP DEFAULT NOW()
 );
