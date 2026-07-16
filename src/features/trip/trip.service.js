@@ -15,7 +15,7 @@ class TripService {
         }
         const trip = await this.dao.insert(createTripDto, ownerId);
         await this.tripMemberService.addMember(trip.tripId, ownerId, 'Participating');
-        return this.dao.insert(createTripDto, ownerId);
+        return trip;
     }
 
     // async getAllTrips() {
