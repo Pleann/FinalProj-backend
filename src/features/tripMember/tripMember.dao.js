@@ -10,6 +10,17 @@ class TripMemberDao {
         return rows.map(row => new TripMemberEntity(row));
     }
 
+    async insert(tripId, userId, memberStatus = 'Participating') {
+        const { rows } = await pool.query(
+            `INSERT INTO TripMember (trip_id, user_id, member_status)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (trip_id, user_id) DO NOTHING
+         RETURNING *`,
+            [tripId, userId, memberStatus]
+        );
+        return rows[0] ? new TripMemberEntity(rows[0]) : null;
+    }
+
     //might no longer use
     // async findById(participantId) {
     //     const { rows } = await pool.query(

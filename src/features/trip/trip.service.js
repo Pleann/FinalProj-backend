@@ -1,9 +1,11 @@
 const uploadImage = require('../../util/uploadImage');
 const TripDao = require("./trip.dao");
+const TripMemberService = require("../tripMember/tripMember.service")
 
 class TripService {
     constructor() {
         this.dao = new TripDao();
+        this.tripMemberService = new TripMemberService();
     }
 
     async createTrip(createTripDto, ownerId, file) {
@@ -11,7 +13,9 @@ class TripService {
         if (file) {
             createTripDto.imageUrl = await uploadImage(file);
         }
-        return this.dao.insert(createTripDto, ownerId);
+        const trip = await this.dao.insert(createTripDto, ownerId);
+        await this.tripMemberService.addMember(trip.tripId, ownerId, 'Participating');
+        return trip;
     }
 
     // async getAllTrips() {
