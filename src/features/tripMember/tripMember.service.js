@@ -17,6 +17,11 @@ class TripMemberService {
         return this.Dao.insert(tripId, userId, memberStatus);
     }
 
+    async getUserByParticipant(participantId){
+        if (!participantId) throw new Error('Could not find participant');
+        return this.Dao.findUserByParticipantId(participantId);
+    }
+
     async updateMemberStatus(tripId, participantId, updateTripMemberDto, ownerId) {
         // Only owner can edit, only on Upcoming trips
         const { rows } = await pool.query(

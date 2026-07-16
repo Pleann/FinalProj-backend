@@ -31,6 +31,16 @@ class TripMemberController {
         }
     }
 
+    async getUserByParticipant(req, res) {
+        try {
+            const { participantId } = req.params;
+            const user = await this.tripMemberService.getUserByParticipant(participantId);
+            res.status(200).json(user);
+        } catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    }
+
     async removeMember(req, res) {
         try {
             const { tripId, participantId } = req.params;

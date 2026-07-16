@@ -21,6 +21,17 @@ class TripMemberDao {
         return rows[0] ? new TripMemberEntity(rows[0]) : null;
     }
 
+    async findUserByParticipantId(participantId) {
+        const { rows } = await pool.query(
+            `SELECT a.*
+             FROM   TripMember tm
+                        JOIN   Account    a ON a.user_id = tm.user_id
+             WHERE  tm.participant_id = $1`,
+            [participantId]
+        );
+        if (rows.length === 0) throw new Error('Participant not found');
+        return rows[0];
+    }
     //might no longer use
     // async findById(participantId) {
     //     const { rows } = await pool.query(
