@@ -14,7 +14,7 @@ class TripMemberService {
     async addMember(tripId, userId, memberStatus = 'Participating') {
         if (!tripId) throw new Error('Could not find trip ID');
         if (!userId) throw new Error('Could not find user ID');
-        return this.memberDao.insert(tripId, userId, memberStatus);
+        return this.Dao.insert(tripId, userId, memberStatus);
     }
 
     async updateMemberStatus(tripId, participantId, updateTripMemberDto, ownerId) {
