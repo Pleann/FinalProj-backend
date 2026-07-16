@@ -52,8 +52,8 @@ class TripService {
         const fields = {};
 
         if (body.tripName)        fields.trip_name        = body.tripName.trim();
-        if (body.startDate)       fields.start_date       = body.startTime;
-        if (body.endDate)         fields.end_date         = body.endTime;
+        if (body.startDate)       fields.start_date       = body.startDate;
+        if (body.endDate)         fields.end_date         = body.endDate;
         if (body.tripDestination) fields.trip_destination = body.tripDestination.trim();
         if (body.meetingPointName)    fields.meeting_point_name    = body.meetingPointName.trim();
         if (body.meetingPointLat)     fields.meeting_point_lat     = body.meetingPointLat;
