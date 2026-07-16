@@ -50,8 +50,8 @@ class LocationService {
 
         const members = await this.memberDao.findByTrip(tripId);
         const userIds = members
-            .filter(m => m.member_status === 'Participating')
-            .map(m => m.user_id);
+            .filter(m => m.memberStatus === 'Participating')
+            .map(m => m.userId);
 
         if (userIds.length > 0) {
             await sendNotification(

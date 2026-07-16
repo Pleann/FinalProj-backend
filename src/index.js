@@ -7,6 +7,10 @@ const PORT = process.env.PORT || 3000;
 const start = async () => {
     try {
         await initDb();
+
+        require('./cron/tripStartScheduler');
+        require('./cron/attendanceScheduler');
+
         app.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT} [${process.env.NODE_ENV}]`);
         });

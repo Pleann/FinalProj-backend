@@ -37,9 +37,9 @@ CREATE TABLE IF NOT EXISTS Account (
 CREATE TABLE IF NOT EXISTS Trip (
                                     trip_id          SERIAL PRIMARY KEY,
                                     trip_name        VARCHAR(255) NOT NULL,
-                                    start_date       TIMESTAMP NOT NULL,
-                                    end_date         TIMESTAMP NOT NULL,
-                                    start_time       TIMESTAMP,
+                                    start_date       TIMESTAMPTZ NOT NULL,
+                                    end_date         TIMESTAMPTZ NOT NULL,
+                                    start_time       TIMESTAMPTZ NOT NULL,
                                     trip_destination VARCHAR(255) NOT NULL,
                                     meeting_point_name VARCHAR(255),
                                     meeting_point_lat  NUMERIC(8,6),
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS Location (
                                           user_id           INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
                                           latitude          DECIMAL(8,6) NOT NULL,
                                           longitude         DECIMAL(9,6) NOT NULL,
-                                          location_timestamp TIMESTAMP
+                                          location_timestamp TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS Activity (
@@ -86,8 +86,8 @@ CREATE TABLE IF NOT EXISTS Activity (
                                           location_name     VARCHAR(255),
                                           location_type     VARCHAR(255),
                                           activity_type     VARCHAR(255),
-                                          ac_start_time     TIMESTAMP NOT NULL,
-                                          ac_end_time       TIMESTAMP NOT NULL,
+                                          ac_start_time     TIMESTAMPTZ NOT NULL,
+                                          ac_end_time       TIMESTAMPTZ NOT NULL,
 
                                           CONSTRAINT chk_activity_times CHECK (ac_end_time > ac_start_time)
 );
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS Expense (
                                           amount            NUMERIC(12,2) NOT NULL,
                                           currency          VARCHAR(5),
                                           billimage_url     TEXT,
-                                          expense_timestamp TIMESTAMP
+                                          expense_timestamp TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS Stop (
@@ -111,8 +111,8 @@ CREATE TABLE IF NOT EXISTS Stop (
                                     activity_id INTEGER REFERENCES Activity(activity_id) ON DELETE SET NULL,
                                     latitude    DECIMAL(8,6) NOT NULL,
                                     longitude   DECIMAL(9,6) NOT NULL,
-                                    entered_at  TIMESTAMP NOT NULL,
-                                    exited_at   TIMESTAMP NOT NULL
+                                    entered_at  TIMESTAMPTZ NOT NULL,
+                                    exited_at   TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Notification (
@@ -123,6 +123,6 @@ CREATE TABLE IF NOT EXISTS Notification (
                                     message            TEXT NOT NULL,
                                     reference_id       INTEGER,
                                     is_read            BOOLEAN DEFAULT FALSE,
-                                    created_at         TIMESTAMP DEFAULT NOW()
+                                    created_at         TIMESTAMPTZ DEFAULT NOW()
 );
 
