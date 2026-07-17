@@ -42,7 +42,7 @@ describe('LocationService', () => {
             locationDaoMock.findTripById.mockResolvedValue(trip);
             locationDaoMock.activateTrip.mockResolvedValue(activatedTrip);
             memberDaoMock.findByTrip.mockResolvedValue([
-                { user_id: 1, member_status: 'Participating' },
+                { userId: 1, memberStatus: 'Participating' },
             ]);
             sendNotification.mockResolvedValue([]);
 
