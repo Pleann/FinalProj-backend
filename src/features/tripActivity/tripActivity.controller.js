@@ -22,6 +22,16 @@ class TripActivityController {
             res.status(500).json({ error: err.message });
         }
     }
+
+    async getActivityTypeCounts(req, res) {
+        try {
+            const { tripId } = req.params;
+            const counts = await this.activityService.countActivityTypesByTrip(tripId);
+            res.status(200).json(counts);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    }
 }
 
 module.exports = TripActivityController;

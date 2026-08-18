@@ -39,6 +39,15 @@ class TripActivityDao {
         );
         return rows.map(row => new ActivityEntity(row));
     }
+
+    //returns how many activities in each activity type
+    async findActivityTypeFromTrip(tripId){
+        const { rows } = await pool.query(
+            `SELECT activity_type FROM Activity WHERE trip_id = $1`,
+            [tripId]
+        );
+        return rows.map(row => new ActivityEntity(row));
+    }
 }
 
 module.exports = TripActivityDao;
