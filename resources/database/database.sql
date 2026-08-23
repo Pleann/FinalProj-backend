@@ -126,3 +126,19 @@ CREATE TABLE IF NOT EXISTS Notification (
                                     created_at         TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS TripPhoto (
+                                    photo_id           SERIAL PRIMARY KEY,
+                                    trip_id            INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
+                                    user_id            INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+                                    photo_url          TEXT NOT NULL,
+                                    uploaded_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS Award (
+                                    award_id           SERIAL PRIMARY KEY,
+                                    trip_id            INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
+                                    user_id            INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+                                    award_name         VARCHAR(255) NOT NULL,
+                                    award_description  TEXT,
+                                    awarded_at         TIMESTAMPTZ DEFAULT NOW()
+);
