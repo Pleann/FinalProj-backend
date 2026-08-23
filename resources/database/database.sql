@@ -31,7 +31,6 @@ CREATE TABLE IF NOT EXISTS Account (
                                        username         VARCHAR(255) NOT NULL,
                                        email            VARCHAR(255) NOT NULL,
                                        password         TEXT NOT NULL          -- stores bcrypt hash, never plain text
-                                    -- awards Should be in another table I think
     );
 
 CREATE TABLE IF NOT EXISTS Trip (
