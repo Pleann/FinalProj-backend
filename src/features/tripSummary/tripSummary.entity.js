@@ -1,21 +1,21 @@
-class tripPhotoEntity {
+class TripPhotoEntity {
     constructor(row) {
         this.photoId = row.photo_id;
         this.tripId = row.trip_id;
         this.userId = row.user_id;
         this.photoUrl = row.photo_url;
-        this.description = row.description;
-        this.createdAt = row.created_at;
+        this.uploadedAt = row.uploaded_at;
     }
 }
 
-class awardEntity {
+class AwardEntity {
     constructor(row) {
         this.awardId = row.award_id;
         this.tripId = row.trip_id;
         this.userId = row.user_id;
         this.awardName = row.award_name;
-        this.description = row.description;
-        this.earnedAt = row.earned_at;
+        this.awardDescription = row.award_description;
+        this.awardedAt = row.awarded_at;
     }
 }
+module.exports = { TripPhotoEntity, AwardEntity };
