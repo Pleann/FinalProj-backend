@@ -18,4 +18,4 @@ class TripAwardEntity {
         this.awardedAt = row.awarded_at;
     }
 }
-module.exports = { TripPhotoEntity, AwardEntity };
+module.exports = { TripPhotoEntity, TripAwardEntity };
