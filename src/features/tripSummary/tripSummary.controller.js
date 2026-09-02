@@ -32,6 +32,58 @@ class TripSummaryController {
             res.status(500).json({ error: err.message });
         }
     }
+
+    async getAwardsByTrip(req, res) {
+        try {
+            const {tripId} = req.params;
+            const awards = await this.tripSummaryService.getAwardsByTrip(tripId);
+            res.status(200).json({
+                message: 'Awards retrieved successfully',
+                awards,
+            });
+        } catch (err) {
+            res.status(500).json({error: err.message});
+        }
+    }
+
+    async getSummaryByTrip(req, res) {
+        try {
+            const { tripId } = req.params;
+            const summary = await this.tripSummaryService.getSummaryByTrip(tripId);
+            res.status(200).json({
+                message: 'Summary retrieved successfully',
+                summary,
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    }
+
+    async getActivityGraphData(req, res) {
+        try {
+            const { tripId, userId } = req.params;
+            const graphData = await this.tripSummaryService.getActivityGraphData(tripId, userId);
+            res.status(200).json({
+                message: 'Activity graph data retrieved successfully',
+                graphData,
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    }
+
+    async getStoryData(req, res) {
+        try {
+            const {tripId, userId} = req.params;
+            const storyData = await this.tripSummaryService.getStoryData(tripId, userId);
+            res.status(200).json({
+                message: 'Story data retrieved successfully',
+                storyData,
+            });
+        } catch (err) {
+            res.status(500).json({error: err.message});
+        }
+    }
 }
 
 module.exports = TripSummaryController;

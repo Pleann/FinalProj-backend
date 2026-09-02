@@ -91,17 +91,17 @@ CREATE TABLE IF NOT EXISTS Activity (
                                           CONSTRAINT chk_activity_times CHECK (ac_end_time > ac_start_time)
 );
 
-CREATE TABLE IF NOT EXISTS Expense (
-                                          expense_id        SERIAL PRIMARY KEY,
-                                          trip_id           INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
-                                          user_id           INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
-                                          activity_id       INTEGER REFERENCES Activity(activity_id) ON DELETE CASCADE,
-                                          expense_name      VARCHAR(255) NOT NULL,
-                                          amount            NUMERIC(12,2) NOT NULL,
-                                          currency          VARCHAR(5),
-                                          billimage_url     TEXT,
-                                          expense_timestamp TIMESTAMPTZ
-);
+-- CREATE TABLE IF NOT EXISTS Expense (
+--                                           expense_id        SERIAL PRIMARY KEY,
+--                                           trip_id           INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
+--                                           user_id           INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+--                                           activity_id       INTEGER REFERENCES Activity(activity_id) ON DELETE CASCADE,
+--                                           expense_name      VARCHAR(255) NOT NULL,
+--                                           amount            NUMERIC(12,2) NOT NULL,
+--                                           currency          VARCHAR(5),
+--                                           billimage_url     TEXT,
+--                                           expense_timestamp TIMESTAMPTZ
+-- );
 
 CREATE TABLE IF NOT EXISTS Stop (
                                     stop_id     SERIAL PRIMARY KEY,

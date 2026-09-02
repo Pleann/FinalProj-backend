@@ -123,20 +123,20 @@ class TripActivityService {
         return this.dao.findActivitiesByTrip(tripId);
     }
 
-    // async countActivityTypesByTrip(tripId) {
-    //     let numAct;
-    //     try {
-    //         numAct = await this.dao.findActivityTypeFromTrip(tripId);
-    //     } catch (error) {
-    //         throw new Error(`Failed to fetch activity types for trip ${tripId}: ${error.message}`);
-    //     }
-    //
-    //     return numAct.reduce((acc, activity) => {
-    //         const type = activity.activityType;
-    //         acc[type] = (acc[type] || 0) + 1;
-    //         return acc;
-    //     }, {});
-    // }
+    async countActivityTypesByTrip(tripId) {
+        let numAct;
+        try {
+            numAct = await this.dao.findActivityTypeFromTrip(tripId);
+        } catch (error) {
+            throw new Error(`Failed to fetch activity types for trip ${tripId}: ${error.message}`);
+        }
+
+        return numAct.reduce((acc, activity) => {
+            const type = activity.activityType;
+            acc[type] = (acc[type] || 0) + 1;
+            return acc;
+        }, {});
+    }
 
     //review this
     async callGooglePlacesAPI(latitude, longitude) {
