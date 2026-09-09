@@ -33,6 +33,18 @@ class TripSummaryController {
         }
     }
 
+    async deletePhoto(req, res) {
+        try {
+            const { photoId } = req.params;
+            await this.tripSummaryService.deletePhoto(photoId);
+            res.status(200).json({
+                message: 'Photo deleted successfully',
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    }
+
     async getAwardsByTrip(req, res) {
         try {
             const {tripId} = req.params;
