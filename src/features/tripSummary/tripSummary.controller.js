@@ -71,10 +71,23 @@ class TripSummaryController {
         }
     }
 
-    async getActivityGraphData(req, res) {
+    async getActivityGraphDataByTrip(req, res) {
+        try {
+            const { tripId } = req.params;
+            const graphData = await this.tripSummaryService.getActivityGraphDataByTrip(tripId);
+            res.status(200).json({
+                message: 'Activity graph data retrieved successfully',
+                graphData,
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    }
+
+    async getActivityGraphDataByUser(req, res) {
         try {
             const { tripId, userId } = req.params;
-            const graphData = await this.tripSummaryService.getActivityGraphData(tripId, userId);
+            const graphData = await this.tripSummaryService.getActivityGraphDataByUser(tripId, userId);
             res.status(200).json({
                 message: 'Activity graph data retrieved successfully',
                 graphData,

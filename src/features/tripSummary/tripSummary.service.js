@@ -260,7 +260,7 @@ class TripSummaryService {
         return awards;
     }
 
-    async setAwards(tripId) {
+    async setAwards(tripId, userId) {
         if (!tripId) throw new Error('Trip ID is required');
         const flat = await this.dao.getSummaryByTrip(tripId);
         const summaries = groupSummariesByUser(flat);
@@ -284,11 +284,22 @@ class TripSummaryService {
         return this.dao.getSummaryByTrip(tripId);
     }
 
-    async getActivityGraphData(tripId, userId) {
+    async getActivityGraphDataByTrip(tripId) {
+        if (!tripId) throw new Error('Trip ID is required');
+
+        const activityTypeCounts = await this.dao.getActivityTypeCountsByTrip(tripId);
+
+        return {
+            totalActivityTypes: activityTypeCounts.length,
+            activityTypeCounts
+        };
+    }
+
+    async getActivityGraphDataByUser(tripId, userId) {
         if (!tripId) throw new Error('Trip ID is required');
         if (!userId) throw new Error('User ID is required');
 
-        const activityTypeCounts = await this.dao.getActivityTypeCounts(tripId, userId);
+        const activityTypeCounts = await this.dao.getActivityTypeCountsByUser(tripId, userId);
 
         return {
             totalActivityTypes: activityTypeCounts.length,
@@ -300,20 +311,22 @@ class TripSummaryService {
         if (!tripId) throw new Error('Trip ID is required');
         if (!userId) throw new Error('User ID is required');
 
-        await this.setAwards(tripId);
+        await this.setAwards(tripId, userId);
 
-        const [summary, photos, awards, activityTypeCounts] = await Promise.all([
+        const [summary, photos, awards, activityTypeCounts, tripMemberReliabilityScores] = await Promise.all([
             this.dao.getSummaryByTrip(tripId),
             this.dao.getPhotosByTrip(tripId),
             this.dao.getAwardsByTrip(tripId),
-            this.dao.getActivityTypeCounts(tripId, userId)
+            this.dao.getActivityTypeCountsByUser(tripId, userId),
+            this.dao.getTripMemberReliabilityScore(tripId)
         ]);
 
         return {
             ...summary,
             photos,
             awards,
-            activityTypeCounts
+            activityTypeCounts,
+            tripMemberReliabilityScores
         };
     }
 }

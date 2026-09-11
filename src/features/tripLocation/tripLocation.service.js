@@ -12,6 +12,13 @@ const MS_PER_MIN         = 60_000;
 const EARLY_MS      =  5 * MS_PER_MIN;
 const ON_TIME_MS    =  5 * MS_PER_MIN;
 const LATE_MAX_MS   = 30 * MS_PER_MIN;
+const RELIABILITY_POINTS = {
+    Early: 25,
+    OnTime: 15,
+    Late: -10,
+    VeryLate: -25,
+    Missing: 0,
+};
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
     const toRad = deg => (deg * Math.PI) / 180;
@@ -107,23 +114,18 @@ class LocationService {
     async evaluateAttendance(tripId) {
         const trip = await this.locationDao.findTripById(tripId);
         if (!trip) throw new Error('Trip not found');
-
-        const members        = await this.locationDao.findTripMembers(tripId);
-        const startDate      = new Date(trip.start_date);
+        const members         = await this.locationDao.findTripMembers(tripId);
+        const startDate       = new Date(trip.start_date);
         const hasMeetingPoint = trip.meeting_point_lat != null && trip.meeting_point_lon != null;
-
         let mpLat, mpLon;
         if (hasMeetingPoint) {
             mpLat = trip.meeting_point_lat;
             mpLon = trip.meeting_point_lon;
         }
-
         const results = [];
-
         for (const member of members) {
             const locations = await this.locationDao.findByUser(member.user_id, tripId);
             let arrivalTime = null;
-
             if (hasMeetingPoint) {
                 for (const loc of locations) {
                     const dist = haversineDistance(
@@ -140,16 +142,13 @@ class LocationService {
                     const lat = parseFloat(loc.latitude);
                     const lon = parseFloat(loc.longitude);
                     let nearbyCount = 1;
-
                     for (const other of members) {
                         if (other.user_id === member.user_id) continue;
                         const otherLocs = await this.locationDao.findByUser(other.user_id, tripId);
                         const contemporaneous = otherLocs
                             .filter(ol => new Date(ol.locationTimestamp) <= new Date(loc.locationTimestamp))
                             .at(-1);
-
                         if (!contemporaneous) continue;
-
                         const dist = haversineDistance(
                             lat, lon,
                             parseFloat(contemporaneous.latitude),
@@ -157,22 +156,32 @@ class LocationService {
                         );
                         if (dist <= VICINITY_RADIUS_M) nearbyCount++;
                     }
-
                     if (nearbyCount / members.length >= MAJORITY_THRESHOLD) {
                         arrivalTime = new Date(loc.locationTimestamp);
                         break;
                     }
                 }
             }
-
             const attendance = arrivalTime
                 ? classifyAttendance(arrivalTime.getTime() - startDate.getTime())
                 : 'Missing';
 
             const updated = await this.locationDao.updateAttendance(tripId, member.user_id, attendance);
-            results.push({ ...updated, first_name: member.first_name, last_name: member.last_name });
-        }
 
+            const scoreDelta = RELIABILITY_POINTS[attendance] ?? 0;
+            let reliability_score = member.reliability_score ?? null;
+            if (scoreDelta !== 0) {
+                const scoreRow = await this.locationDao.incrementReliabilityScore(member.user_id, scoreDelta);
+                reliability_score = scoreRow.reliability_score;
+            }
+
+            results.push({
+                ...updated,
+                first_name: member.first_name,
+                last_name: member.last_name,
+                reliability_score,
+            });
+        }
         return results;
     }
 

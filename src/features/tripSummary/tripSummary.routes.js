@@ -10,7 +10,8 @@ router.get('/photos', (req, res) => tripSummaryController.getPhotosByTrip(req, r
 router.delete('/photo/:photoId', (req, res) => tripSummaryController.deletePhoto(req, res));
 router.get('/awards', (req, res) => tripSummaryController.getAwardsByTrip(req, res));
 router.get('/summary', (req, res) => tripSummaryController.getSummaryByTrip(req, res));
-router.get('/activityGraph', (req, res) => tripSummaryController.getActivityGraphData(req, res));
+router.get('/activityGraphTrip', (req, res) => tripSummaryController.getActivityGraphDataByTrip(req, res));
+router.get('/activityGraphUser', (req, res) => tripSummaryController.getActivityGraphDataByUser(req, res));
 router.get('/story', (req, res) => tripSummaryController.getStoryData(req, res));
 
 module.exports = router;

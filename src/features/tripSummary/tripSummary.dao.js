@@ -72,7 +72,7 @@ class TripSummaryDao {
             [tripId]
         );
         const { rows: activityRows } = await pool.query(
-            `SELECT activity_id, location_name, location_type, activity_type, ac_start_time, ac_end_time FROM TripActivity WHERE trip_id = $1`,
+            `SELECT activity_id, location_name, location_type, activity_type, ac_start_time, ac_end_time FROM Activity WHERE trip_id = $1`,
             [tripId]
         );
         const { rows: awardRows } = await pool.query(
@@ -80,11 +80,16 @@ class TripSummaryDao {
             [tripId]
         );
         const { rows: stopRows } = await pool.query(
-            `SELECT stop_id, latitude, longitude, entered_at, exited_at FROM Stop WHERE trip_id = $1 ORDER BY entered_at ASC`,
+            `SELECT s.stop_id, s.latitude, s.longitude, s.entered_at, s.exited_at,
+                    a.location_name, a.location_type
+             FROM Stop s
+                      LEFT JOIN Activity a ON a.activity_id = s.activity_id
+             WHERE s.trip_id = $1
+             ORDER BY s.entered_at ASC`,
             [tripId]
         );
         const { rows: photoRows } = await pool.query(
-            `SELECT photo_id, photo_url, uploaded_at FROM Photo WHERE trip_id = $1`,
+            `SELECT photo_id, photo_url, uploaded_at FROM TripPhoto WHERE trip_id = $1`,
             [tripId]
         );
 
@@ -93,7 +98,11 @@ class TripSummaryDao {
             members: memberRows.map(row => new TripMemberEntity(row)),
             activities: activityRows.map(row => new ActivityEntity(row)),
             awards: awardRows.map(row => new TripAwardEntity(row)),
-            stops: stopRows.map(row => new StopEntity(row)),
+            stops: stopRows.map(row => ({
+                ...new StopEntity(row),
+                locationName: row.location_name,
+                locationType: row.location_type,
+            })),
             photos: photoRows.map(row => new TripPhotoEntity(row))
         };
     }
@@ -134,7 +143,19 @@ class TripSummaryDao {
     //     };
     // }
 
-    async getActivityTypeCounts(tripId, userId) {
+    async getActivityTypeCountsByTrip(tripId) {
+        const { rows } = await pool.query(
+            `SELECT activity_type, COUNT(*) AS count FROM TripActivity WHERE trip_id = $1
+             GROUP BY activity_type`,
+            [tripId]
+        );
+        return rows.map(row => ({
+            activityType: row.activity_type,
+            count: parseInt(row.count, 10)
+        }));
+    }
+
+    async getActivityTypeCountsByUser(tripId, userId) {
         const { rows } = await pool.query(
             `SELECT activity_type, COUNT(*) AS count FROM TripActivity WHERE trip_id = $1 AND user_id = $2
              GROUP BY activity_type`,
@@ -144,6 +165,18 @@ class TripSummaryDao {
             activityType: row.activity_type,
             count: parseInt(row.count, 10)
         }));
+    }
+
+    async getTripMemberReliabilityScore(tripId) {
+        const { rows } = await pool.query(
+            `SELECT tm.participant_id, tm.trip_id, tm.user_id, tm.attendance,
+                    a.username, a.reliability_score
+             FROM TripMember tm
+                      JOIN Account a ON a.user_id = tm.user_id
+             WHERE tm.trip_id = $1`,
+            [tripId]
+        );
+        return rows.map(row => new TripMemberEntity(row));
     }
 }
 

@@ -30,8 +30,9 @@ CREATE TABLE IF NOT EXISTS Account (
                                        last_name        VARCHAR(255) NOT NULL,
                                        username         VARCHAR(255) NOT NULL,
                                        email            VARCHAR(255) NOT NULL,
-                                       password         TEXT NOT NULL          -- stores bcrypt hash, never plain text
-    );
+                                       password         TEXT NOT NULL,          -- stores bcrypt hash, never plain text
+                                       reliability_score  NUMERIC(5,2) DEFAULT 200.00
+);
 
 CREATE TABLE IF NOT EXISTS Trip (
                                     trip_id          SERIAL PRIMARY KEY,
