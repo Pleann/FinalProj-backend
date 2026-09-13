@@ -260,7 +260,7 @@ class TripSummaryService {
         return awards;
     }
 
-    async setAwards(tripId, userId) {
+    async setAwards(tripId) {
         if (!tripId) throw new Error('Trip ID is required');
         const flat = await this.dao.getSummaryByTrip(tripId);
         const summaries = groupSummariesByUser(flat);
@@ -311,7 +311,7 @@ class TripSummaryService {
         if (!tripId) throw new Error('Trip ID is required');
         if (!userId) throw new Error('User ID is required');
 
-        await this.setAwards(tripId, userId);
+        await this.setAwards(tripId);
 
         const [summary, photos, awards, activityTypeCounts, tripMemberReliabilityScores] = await Promise.all([
             this.dao.getSummaryByTrip(tripId),

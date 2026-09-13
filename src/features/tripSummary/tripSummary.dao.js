@@ -44,7 +44,11 @@ class TripSummaryDao {
         const { rows } = await pool.query(
             `INSERT INTO Award (trip_id, user_id, award_name, award_description)
              VALUES ($1, $2, $3, $4)
-             RETURNING *`,
+                 ON CONFLICT (trip_id, award_name)
+         DO UPDATE SET
+                user_id = EXCLUDED.user_id,
+                                 award_description = EXCLUDED.award_description
+                                 RETURNING *`,
             [tripId, userId, awardName, awardDesc]
         );
 

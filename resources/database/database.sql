@@ -140,5 +140,6 @@ CREATE TABLE IF NOT EXISTS Award (
                                     user_id            INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
                                     award_name         VARCHAR(255) NOT NULL,
                                     award_description  TEXT,
-                                    awarded_at         TIMESTAMPTZ DEFAULT NOW()
+                                    awarded_at         TIMESTAMPTZ DEFAULT NOW(),
+                                    ADD CONSTRAINT award_trip_name_unique UNIQUE (trip_id, award_name);
 );
