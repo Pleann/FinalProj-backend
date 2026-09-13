@@ -86,7 +86,8 @@ class TripSummaryController {
 
     async getActivityGraphDataByUser(req, res) {
         try {
-            const { tripId, userId } = req.params;
+            const { tripId } = req.params;
+            const { userId } = req.query;
             const graphData = await this.tripSummaryService.getActivityGraphDataByUser(tripId, userId);
             res.status(200).json({
                 message: 'Activity graph data retrieved successfully',
@@ -99,7 +100,8 @@ class TripSummaryController {
 
     async getStoryData(req, res) {
         try {
-            const {tripId, userId} = req.params;
+            const { tripId } = req.params;
+            const { userId } = req.query;
             const storyData = await this.tripSummaryService.getStoryData(tripId, userId);
             res.status(200).json({
                 message: 'Story data retrieved successfully',
