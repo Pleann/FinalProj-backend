@@ -141,5 +141,5 @@ CREATE TABLE IF NOT EXISTS Award (
                                     award_name         VARCHAR(255) NOT NULL,
                                     award_description  TEXT,
                                     awarded_at         TIMESTAMPTZ DEFAULT NOW(),
-                                    ADD CONSTRAINT award_trip_name_unique UNIQUE (trip_id, award_name);
+                                    CONSTRAINT award_trip_name_unique UNIQUE (trip_id, award_name)
 );
