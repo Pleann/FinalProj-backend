@@ -1,8 +1,8 @@
 const pool = require('../../config/db');
 const { TripPhotoEntity } = require('./tripSummary.entity');
 const { TripAwardEntity } = require('./tripSummary.entity');
-const { TripEntity } = require('../trip/trip.entity');
-const { TripMemberEntity } = require('../tripMember/tripMember.entity');
+const TripEntity = require('../trip/trip.entity');
+const TripMemberEntity = require('../tripMember/tripMember.entity');
 const { ActivityEntity } = require('../tripActivity/tripActivity.entity');
 const { StopEntity } = require('../tripActivity/tripActivity.entity');
 
@@ -42,7 +42,7 @@ class TripSummaryDao {
 
     async setAward(tripId, userId, awardName, awardDesc) {
         const { rows } = await pool.query(
-            `INSERT INTO Award (trip_id, user_id, award_name, award_description)
+            `INSERT INTO TripAward (trip_id, user_id, award_name, award_description)
              VALUES ($1, $2, $3, $4)
                  ON CONFLICT (trip_id, award_name)
          DO UPDATE SET
@@ -58,7 +58,7 @@ class TripSummaryDao {
     async getAwardsByTrip(tripId) {
         const { rows } = await pool.query(
             `SELECT *
-             FROM Award
+             FROM TripAward
              WHERE trip_id = $1`,
             [tripId]
         );
@@ -149,7 +149,7 @@ class TripSummaryDao {
 
     async getActivityTypeCountsByTrip(tripId) {
         const { rows } = await pool.query(
-            `SELECT activity_type, COUNT(*) AS count FROM TripActivity WHERE trip_id = $1
+            `SELECT activity_type, COUNT(*) AS count FROM Activity WHERE trip_id = $1
              GROUP BY activity_type`,
             [tripId]
         );
@@ -161,7 +161,7 @@ class TripSummaryDao {
 
     async getActivityTypeCountsByUser(tripId, userId) {
         const { rows } = await pool.query(
-            `SELECT activity_type, COUNT(*) AS count FROM TripActivity WHERE trip_id = $1 AND user_id = $2
+            `SELECT activity_type, COUNT(*) AS count FROM Activity WHERE trip_id = $1 AND user_id = $2
              GROUP BY activity_type`,
             [tripId, userId]
         );

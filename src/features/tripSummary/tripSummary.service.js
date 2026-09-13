@@ -106,12 +106,28 @@ function pickWinner(summaries, scoreFn) {
     return scored.reduce((max, s) => s.score > max.score ? s : max);
 }
 
-function buildAward(tripId, summary, awardName, awardDesc) {
+function buildAward(
+    tripId,
+    summary,
+    awardName,
+    awardDesc
+) {
+    const userId =
+        summary?.userId ??
+        summary?.user_id ??
+        null;
+
+    console.log('BUILD AWARD:', {
+        awardName,
+        userId,
+        summary,
+    });
+
     return {
         tripId,
-        userId: summary.member[0].user_id,
+        userId,
         awardName,
-        awardDesc
+        awardDesc,
     };
 }
 
@@ -121,6 +137,7 @@ function groupSummariesByUser(flat) {
     return members.map(member => {
         const userId = member.user_id;
         return {
+            userId,
             member: [member],
             activities: activities.filter(a => a.user_id === userId),
             awards: awards.filter(a => a.user_id === userId),
@@ -157,6 +174,15 @@ class TripSummaryService {
     }
 
     evaluateAwards(tripId, summaries, tripStart) {
+        console.log(
+        '========== EVALUATE AWARDS =========='
+        );
+
+        console.log(
+            'SUMMARIES:',
+            JSON.stringify(summaries, null, 2)
+        );
+
         const awards = [];
 
         // ---- lateArrival ----
@@ -258,7 +284,17 @@ class TripSummaryService {
         const transitTitan = pickWinner(summaries, s => totalDuration(getActivitiesByType(s, 'transit')));
         awards.push(buildAward(tripId, transitTitan.summary, 'Transit Titan', 'spent the trip going places!'));
 
-        return awards;
+        return awards.filter((award) => {
+            if (!award.userId) {
+                console.warn(
+                    `SKIP AWARD "${award.awardName}": userId is missing`
+                );
+
+                return false;
+            }
+
+            return true;
+        });
     }
 
     async setAwards(tripId) {
@@ -273,6 +309,21 @@ class TripSummaryService {
         return Promise.all(
             awards.map(a => this.dao.setAward(tripId, a.userId, a.awardName, a.awardDesc))
         );
+        for (const award of awards) {
+            if (!award.userId) {
+                console.warn(
+                `SKIP AWARD ${award.awardName}: missing userId`,
+                );
+                continue;
+            }
+
+            await this.dao.setAward(
+                tripId,
+                award.userId,
+                award.awardName,
+                award.awardDesc,
+            );
+        }
     }
 
     async getAwardsByTrip(tripId) {

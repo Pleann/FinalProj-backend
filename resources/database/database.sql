@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS TripPhoto (
                                     uploaded_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS Award (
+CREATE TABLE IF NOT EXISTS TripAward (
                                     award_id           SERIAL PRIMARY KEY,
                                     trip_id            INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
                                     user_id            INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
