@@ -4,6 +4,10 @@ class TripPhotoEntity {
         this.tripId = row.trip_id;
         this.userId = row.user_id;
         this.photoUrl = row.photo_url;
+        this.capturedAt = row.captured_at;
+        this.locationName = row.location_name;
+        this.latitude = row.latitude;
+        this.longitude = row.longitude;
         this.uploadedAt = row.uploaded_at;
     }
 }

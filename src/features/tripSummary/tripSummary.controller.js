@@ -8,13 +8,23 @@ class TripSummaryController {
     async savePhoto(req, res) {
         try {
             const { tripId } = req.params;
+            const { capturedAt, locationName, latitude, longitude } = req.body;
             // Replace with req.user.userId when JWT authentication is enabled.
             const userId = req.user?.userId || 1;
-            const photo = await this.tripSummaryService.savePhoto(tripId, userId, req.file);
+            const photo = await this.tripSummaryService.savePhoto(
+                tripId,
+                userId,
+                req.file,
+                capturedAt,
+                locationName,
+                latitude ? parseFloat(latitude) : null,
+                longitude ? parseFloat(longitude) : null);
+
             res.status(201).json({
                 message: 'Photo added successfully',
                 photo,
             });
+
         } catch (err) {
             res.status(400).json({ error: err.message });
         }

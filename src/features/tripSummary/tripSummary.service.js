@@ -136,13 +136,14 @@ class TripSummaryService {
         this.tripDao = new TripDao();
     }
 
-    async savePhoto(tripId, userId, file) {
+    async savePhoto(tripId, userId, file, capturedAt, locationName, latitude, longitude) {
         if (!tripId) throw new Error('Trip ID is required');
         if (!userId) throw new Error('User ID is required');
         if (!file) throw new Error('Photo is required');
 
         const photoUrl = await uploadImage(file, 'trip-photos');
-        return this.dao.insertPhoto(tripId, userId, photoUrl);
+
+        return this.dao.insertPhoto(tripId, userId, photoUrl, capturedAt ?? null, locationName ?? null, latitude ?? null, longitude ?? null);
     }
 
     async getPhotosByTrip(tripId) {

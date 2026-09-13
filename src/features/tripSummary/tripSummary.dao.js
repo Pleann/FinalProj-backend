@@ -7,12 +7,12 @@ const { ActivityEntity } = require('../tripActivity/tripActivity.entity');
 const { StopEntity } = require('../tripActivity/tripActivity.entity');
 
 class TripSummaryDao {
-    async insertPhoto(tripId, userId, photoUrl) {
+    async insertPhoto(tripId, userId, photoUrl, capturedAt, locationName, latitude, longitude) {
         const { rows } = await pool.query(
-            `INSERT INTO TripPhoto (trip_id, user_id, photo_url)
-             VALUES ($1, $2, $3)
+            `INSERT INTO TripPhoto (trip_id, user_id, photo_url, captured_at, location_name, latitude, longitude)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING *`,
-            [tripId, userId, photoUrl]
+            [tripId, userId, photoUrl, capturedAt, locationName, latitude, longitude]
         );
 
         return new TripPhotoEntity(rows[0]);

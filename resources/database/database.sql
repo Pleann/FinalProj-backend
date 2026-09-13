@@ -131,6 +131,10 @@ CREATE TABLE IF NOT EXISTS TripPhoto (
                                     trip_id            INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
                                     user_id            INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
                                     photo_url          TEXT NOT NULL,
+                                    captured_at        TIMESTAMPTZ,
+                                    location_name      VARCHAR(255),
+                                    latitude           DECIMAL(8,6),
+                                    longitude          DECIMAL(9,6),
                                     uploaded_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
