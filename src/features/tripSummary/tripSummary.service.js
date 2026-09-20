@@ -154,23 +154,39 @@ class TripSummaryService {
     }
 
     async savePhoto(tripId, userId, file, capturedAt, locationName, latitude, longitude) {
-        if (!tripId) throw new Error('Trip ID is required');
-        if (!userId) throw new Error('User ID is required');
-        if (!file) throw new Error('Photo is required');
+        if (!tripId) throw new Error('Could not save photo: tripId is required');
+        if (!userId) throw new Error('Could not save photo: userId is required');
+        if (!file) throw new Error('Could not save photo: file is required');
 
         const photoUrl = await uploadImage(file, 'trip-photos');
 
-        return this.dao.insertPhoto(tripId, userId, photoUrl, capturedAt ?? null, locationName ?? null, latitude ?? null, longitude ?? null);
+        try {
+            return await this.dao.insertPhoto(
+                tripId, userId, photoUrl,
+                capturedAt ?? null, locationName ?? null, latitude ?? null, longitude ?? null
+            );
+        } catch (err) {
+            wrapError(err, 'Could not save photo');
+        }
     }
 
     async getPhotosByTrip(tripId) {
-        if (!tripId) throw new Error('Trip ID is required');
-        return this.dao.getPhotosByTrip(tripId);
+        if (!tripId) throw new Error('Could not retrieve photos: tripId is required');
+
+        try {
+            return await this.dao.getPhotosByTrip(tripId);
+        } catch (err) {
+            wrapError(err, 'Could not retrieve photos');
+        }
     }
 
     async deletePhoto(photoId) {
-        if (!photoId) throw new Error('Photo ID is required');
-        return this.dao.deletePhoto(photoId);
+        if (!photoId) throw new Error('Could not delete, photoId is required');
+        try {
+            return await this.dao.deletePhoto(photoId);
+        } catch (err) {
+            wrapError(err, 'Could not delete photo');
+        }
     }
 
     evaluateAwards(tripId, summaries, tripStart) {
@@ -298,7 +314,7 @@ class TripSummaryService {
     }
 
     async setAwards(tripId) {
-        if (!tripId) throw new Error('Trip ID is required');
+        if (!tripId) throw new Error('Could not set award: tripId is required');
         const flat = await this.dao.getSummaryByTrip(tripId);
         const summaries = groupSummariesByUser(flat);
 
@@ -327,19 +343,28 @@ class TripSummaryService {
     }
 
     async getAwardsByTrip(tripId) {
-        if (!tripId) throw new Error('Trip ID is required');
+        if (!tripId) throw new Error('Could not retrieve trip awards: trip ID is required');
         return this.dao.getAwardsByTrip(tripId);
     }
 
     async getSummaryByTrip(tripId) {
-        if (!tripId) throw new Error('Trip ID is required');
-        return this.dao.getSummaryByTrip(tripId);
+        if (!tripId) throw new Error('Could not retrieve trip summary: tripId is required');
+        try {
+            return await this.dao.getSummaryByTrip(tripId);
+        } catch (err) {
+            wrapError(err, 'Could not retrieve trip summary');
+        }
     }
 
     async getActivityGraphDataByTrip(tripId) {
-        if (!tripId) throw new Error('Trip ID is required');
+        if (!tripId) throw new Error('Could not retrieve activity data: tripId is required');``
 
-        const activityTypeCounts = await this.dao.getActivityTypeCountsByTrip(tripId);
+        let activityTypeCounts;
+        try {
+            activityTypeCounts = await this.dao.getActivityTypeCountsByTrip(tripId);
+        } catch (err) {
+            wrapError(err, 'Could not retrieve activity data');
+        }
 
         return {
             totalActivityTypes: activityTypeCounts.length,
@@ -348,10 +373,15 @@ class TripSummaryService {
     }
 
     async getActivityGraphDataByUser(tripId, userId) {
-        if (!tripId) throw new Error('Trip ID is required');
-        if (!userId) throw new Error('User ID is required');
+        if (!tripId) throw new Error('Could not retrieve activity data: tripId is required');
+        if (!userId) throw new Error('Could not retrieve activity data: userId is required');
 
-        const activityTypeCounts = await this.dao.getActivityTypeCountsByUser(tripId, userId);
+        let activityTypeCounts;
+        try {
+            activityTypeCounts = await this.dao.getActivityTypeCountsByUser(tripId, userId);
+        } catch (err) {
+            wrapError(err, 'Could not retrieve activity data');
+        }
 
         return {
             totalActivityTypes: activityTypeCounts.length,
@@ -360,8 +390,8 @@ class TripSummaryService {
     }
 
     async getStoryData(tripId, userId) {
-        if (!tripId) throw new Error('Trip ID is required');
-        if (!userId) throw new Error('User ID is required');
+        if (!tripId) throw new Error('Could not retrieve story data: tripId is required');
+        if (!userId) throw new Error('Could not retrieve story data: userId is required');
 
         await this.setAwards(tripId);
 

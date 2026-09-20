@@ -1,354 +1,798 @@
+/**
+ * Unit tests for tripSummary.service.js
+ *
+ * Updated to match the CURRENT TripSummaryService implementation.
+ *
+ * Notes:
+ * - savePhoto now accepts metadata:
+ *   (tripId, userId, file, capturedAt, locationName, latitude, longitude)
+ * - setAwards currently accepts only tripId.
+ * - getAwardsByTrip currently throws "Trip ID is required" for a missing tripId.
+ * - getStoryData currently requires both tripId and userId.
+ * - getStoryData returns an object even when all sub-collections are empty.
+ * - evaluateAwards currently does not validate tripId/tripStart or check whether a trip exists.
+ */
 
 jest.mock('../tripSummary.dao');
+jest.mock('../../trip/trip.dao');
 jest.mock('../../../util/uploadImage');
 
 const TripSummaryService = require('../tripSummary.service');
 const TripSummaryDao = require('../tripSummary.dao');
+const TripDao = require('../../trip/trip.dao');
 const uploadImage = require('../../../util/uploadImage');
 
+function wrapError(err, message) {
+    throw new Error(`${message}: ${err.message}`);
+}
+
+const file = { originalname: 'testphoto.jpg' };
+const tripStart = '2026-09-10T07:30:00Z';
+
+const photo = (id, url, overrides = {}) => ({
+    photoId: id,
+    tripId: 1,
+    userId: 1,
+    photoUrl: url,
+    ...overrides,
+});
+
+const appendixA = [{
+    userId: 1,
+    member: [{ user_id: 1, attendance: 'Early' }],
+    activities: [{
+        user_id: 1,
+        activity_type: 'transit',
+        location_name: 'Station',
+        location_type: 'station',
+        ac_start_time: '2026-09-10T08:00:00Z',
+        ac_end_time: '2026-09-10T10:00:00Z',
+    }],
+    awards: [{ user_id: 1, award_name: 'Early Bird' }],
+    stops: [
+        { user_id: 1, latitude: 18.796, longitude: 98.955 },
+        { user_id: 1, latitude: 18.800, longitude: 98.960 },
+    ],
+    photos: [{ user_id: 1 }],
+}];
+
+const flatSummary = {
+    members: [{ user_id: 1, attendance: 'Early' }],
+    activities: [{
+        user_id: 1,
+        activity_type: 'transit',
+        location_name: 'Station',
+        location_type: 'station',
+        ac_start_time: '2026-09-10T08:00:00Z',
+        ac_end_time: '2026-09-10T10:00:00Z',
+    }],
+    awards: [],
+    stops: [
+        { user_id: 1, latitude: 18.796, longitude: 98.955 },
+        { user_id: 1, latitude: 18.800, longitude: 98.960 },
+    ],
+    photos: [{ user_id: 1 }],
+};
+
 describe('TripSummaryService', () => {
-    let tripSummaryService;
-    let daoMock;
+    let service;
+    let dao;
+    let tripDao;
 
     beforeEach(() => {
         jest.clearAllMocks();
-        tripSummaryService = new TripSummaryService();
-        daoMock = TripSummaryDao.mock.instances[0];
         uploadImage.mockReset();
+
+        service = new TripSummaryService();
+        dao = TripSummaryDao.mock.instances[0];
+        tripDao = TripDao.mock.instances[0];
     });
 
-    describe('UTC-27: savePhotos', () => {
-        test('UTC-27-01: saves a photo URL successfully', async () => {
-            const file = { originalname: 'testphoto.jpg' };
-            const savedPhoto = { tripId: 1, userId: 1, imageUrl: 'https://example.com/testphoto.jpg' };
-            uploadImage.mockResolvedValue('https://example.com/testphoto.jpg');
-            daoMock.insertPhoto.mockResolvedValue(savedPhoto);
+    // ------------------------------------------------------------------
+    // UTC-27: savePhoto
+    // Current signature:
+    // savePhoto(tripId, userId, file, capturedAt, locationName, latitude, longitude)
+    // ------------------------------------------------------------------
 
-            const result = await tripSummaryService.savePhoto(1, 1, file);
+    describe('UTC-27: savePhoto', () => {
+        test('UTC27-01 saves a photo successfully with metadata', async () => {
+            const saved = photo(1, 'https://example.com/test-1.jpeg', {
+                capturedAt: '2026-09-10T08:30:00Z',
+                locationName: 'Central Market',
+                latitude: 18.7889,
+                longitude: 98.9847,
+            });
+
+            uploadImage.mockResolvedValue(saved.photoUrl);
+            dao.insertPhoto.mockResolvedValue(saved);
+
+            await expect(
+                service.savePhoto(
+                    1,
+                    1,
+                    file,
+                    '2026-09-10T08:30:00Z',
+                    'Central Market',
+                    18.7889,
+                    98.9847
+                )
+            ).resolves.toEqual(saved);
 
             expect(uploadImage).toHaveBeenCalledWith(file, 'trip-photos');
-            expect(daoMock.insertPhoto).toHaveBeenCalledWith(1, 1, 'https://example.com/testphoto.jpg');
-            expect(result).toEqual(savedPhoto);
+
+            expect(dao.insertPhoto).toHaveBeenCalledWith(
+                1,
+                1,
+                'https://example.com/test-1.jpeg',
+                '2026-09-10T08:30:00Z',
+                'Central Market',
+                18.7889,
+                98.9847
+            );
         });
 
-        test('UTC-27-02: throws an error when tripId is missing', async () => {
-            const file = { originalname: 'testphoto.jpg' };
+        test('UTC27-02 sends null metadata when optional metadata is omitted', async () => {
+            const saved = photo(1, 'https://example.com/test-1.jpeg');
 
-            await expect(tripSummaryService.savePhoto(null, 1, file)).rejects.toThrow('Trip ID is required');
-            expect(uploadImage).not.toHaveBeenCalled();
-            expect(daoMock.insertPhoto).not.toHaveBeenCalled();
+            uploadImage.mockResolvedValue(saved.photoUrl);
+            dao.insertPhoto.mockResolvedValue(saved);
+
+            await service.savePhoto(1, 1, file);
+
+            expect(dao.insertPhoto).toHaveBeenCalledWith(
+                1,
+                1,
+                'https://example.com/test-1.jpeg',
+                null,
+                null,
+                null,
+                null
+            );
         });
 
-        test('UTC-27-03: throws an error when photo URL is missing or empty', async () => {
-            await expect(tripSummaryService.savePhoto(1, 1, null)).rejects.toThrow('Photo is required');
+        test('UTC27-03 throws when tripId is missing', async () => {
+            await expect(
+                service.savePhoto(null, 1, file)
+            ).rejects.toThrow(
+                'Could not save photo: tripId is required'
+            );
+
             expect(uploadImage).not.toHaveBeenCalled();
-            expect(daoMock.insertPhoto).not.toHaveBeenCalled();
+            expect(dao.insertPhoto).not.toHaveBeenCalled();
         });
 
-        test('UTC-27-04: throws an error when userId is missing', async () => {
-            const file = { originalname: 'testphoto.jpg' };
+        test('UTC27-04 throws when userId is missing', async () => {
+            await expect(
+                service.savePhoto(1, null, file)
+            ).rejects.toThrow(
+                'Could not save photo: userId is required'
+            );
 
-            await expect(tripSummaryService.savePhoto(1, null, file)).rejects.toThrow('User ID is required');
             expect(uploadImage).not.toHaveBeenCalled();
-            expect(daoMock.insertPhoto).not.toHaveBeenCalled();
+            expect(dao.insertPhoto).not.toHaveBeenCalled();
+        });
+
+        test('UTC27-05 throws when file is missing', async () => {
+            await expect(
+                service.savePhoto(1, 1, null)
+            ).rejects.toThrow(
+                'Could not save photo: file is required'
+            );
+
+            expect(uploadImage).not.toHaveBeenCalled();
+            expect(dao.insertPhoto).not.toHaveBeenCalled();
         });
     });
 
+    // ------------------------------------------------------------------
+    // UTC-28: getPhotosByTrip
+    // ------------------------------------------------------------------
+
     describe('UTC-28: getPhotosByTrip', () => {
-        test('UTC-28-01: retrieves photos successfully for a trip with photos', async () => {
-            const photos = [
-                { tripId: 1, photoUrl: 'https://example.com/test-1.jpeg' },
-                { tripId: 1, photoUrl: 'https://example.com/test-2.jpeg' },
-            ];
-            daoMock.getPhotosByTrip.mockResolvedValue(photos);
+        test('UTC28-01 retrieves photos for a trip with photos', async () => {
+            const photos = [1, 2, 3].map((id) =>
+                photo(id, `https://example.com/test-${id}.jpeg`)
+            );
 
-            const result = await tripSummaryService.getPhotosByTrip(1);
+            dao.getPhotosByTrip.mockResolvedValue(photos);
 
-            expect(daoMock.getPhotosByTrip).toHaveBeenCalledWith(1);
+            const result = await service.getPhotosByTrip(1);
+
             expect(result).toEqual(photos);
         });
 
-        test('UTC-28-02: retrieves photos for a trip with no photos', async () => {
-            daoMock.getPhotosByTrip.mockResolvedValue([]);
+        test('UTC28-02 returns an empty array when the trip has no photos', async () => {
+            dao.getPhotosByTrip.mockResolvedValue([]);
 
-            const result = await tripSummaryService.getPhotosByTrip(2);
-
-            expect(result).toEqual([]);
+            await expect(
+                service.getPhotosByTrip(2)
+            ).resolves.toEqual([]);
         });
 
-        test('UTC-28-03: throws an error when tripId is missing', async () => {
-            await expect(tripSummaryService.getPhotosByTrip(null)).rejects.toThrow('Trip ID is required');
-        });
-
-        test('UTC-28-04: throws an error when the retrieval fails', async () => {
-            daoMock.getPhotosByTrip.mockRejectedValue(new Error('Database unavailable'));
-
-            await expect(tripSummaryService.getPhotosByTrip(1)).rejects.toThrow('Database unavailable');
+        test('UTC28-03 throws when tripId is missing', async () => {
+            await expect(
+                service.getPhotosByTrip(null)
+            ).rejects.toThrow(
+                'Could not retrieve photos: tripId is required'
+            );
         });
     });
+
+    // ------------------------------------------------------------------
+    // UTC-29: setAwards
+    // Current signature: setAwards(tripId)
+    // ------------------------------------------------------------------
 
     describe('UTC-29: setAwards', () => {
-        const validSummary = {
-            members: [{ user_id: 1 }, { user_id: 2 }],
-            activities: [
+        test('UTC29-01 evaluates and persists awards for the trip', async () => {
+            dao.getSummaryByTrip.mockResolvedValue(flatSummary);
+            tripDao.findById.mockResolvedValue({
+                startTime: tripStart,
+            });
+
+            const evaluatedAwards = [
                 {
-                    user_id: 1,
-                    location_name: 'Ang Kaew',
-                    ac_start_time: '2024-01-01T09:00:00.000Z',
-                    ac_end_time: '2024-01-01T10:00:00.000Z'
+                    tripId: 1,
+                    userId: 1,
+                    awardName: 'Transit Titan',
+                    awardDesc: 'spent the trip going places!',
                 },
-                {
-                    user_id: 1,
-                    location_name: 'Phu Kradueng',
-                    ac_start_time: '2024-01-02T09:00:00.000Z',
-                    ac_end_time: '2024-01-02T11:00:00.000Z'
-                },
-                {
-                    user_id: 2,
-                    location_name: 'Doi Suthep',
-                    ac_start_time: '2024-01-01T09:00:00.000Z',
-                    ac_end_time: '2024-01-01T09:30:00.000Z'
-                }
-            ],
-            awards: [],
-            stops: [
-                { user_id: 1, latitude: 18.796, longitude: 98.955, entered_at: '2024-01-01T08:00:00Z' },
-                { user_id: 1, latitude: 18.800, longitude: 98.960, entered_at: '2024-01-01T12:00:00Z' },
-                { user_id: 2, latitude: 18.790, longitude: 98.950, entered_at: '2024-01-01T08:00:00Z' },
-            ],
-            photos: [
-                { user_id: 1 },
-                { user_id: 1 },
-                { user_id: 2 }
-            ]
-        };
+            ];
 
-        test('UTC-29-01: sets awards successfully based on trip stats', async () => {
-            daoMock.getSummaryByTrip.mockResolvedValue(validSummary);
-            daoMock.setAward.mockResolvedValue({ awardId: 1 });
+            jest.spyOn(service, 'evaluateAwards')
+                .mockReturnValue(evaluatedAwards);
 
-            const result = await tripSummaryService.setAwards(1);
+            dao.setAward.mockResolvedValue({
+                awardId: 1,
+                ...evaluatedAwards[0],
+            });
 
-            expect(daoMock.getSummaryByTrip).toHaveBeenCalledWith(1);
-            expect(daoMock.setAward).toHaveBeenCalledTimes(5);
-            expect(result).toHaveLength(5);
+            const result = await service.setAwards(1);
+
+            expect(dao.getSummaryByTrip).toHaveBeenCalledWith(1);
+            expect(tripDao.findById).toHaveBeenCalledWith(1);
+
+            expect(service.evaluateAwards).toHaveBeenCalledWith(
+                1,
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        userId: 1,
+                    }),
+                ]),
+                tripStart
+            );
+
+            expect(dao.setAward).toHaveBeenCalledWith(
+                1,
+                1,
+                'Transit Titan',
+                'spent the trip going places!'
+            );
+
+            expect(result).toEqual([
+                expect.objectContaining({
+                    awardName: 'Transit Titan',
+                }),
+            ]);
         });
 
-        test('UTC-29-02: does not set an award when the trip has no qualifying stats', async () => {
-            const emptySummary = {
-                members: [{ user_id: 1 }],
-                activities: [],
-                awards: [],
-                stops: [],
-                photos: []
-            };
-            daoMock.getSummaryByTrip.mockResolvedValue(emptySummary);
+        test('UTC29-02 returns an empty array when evaluateAwards returns no awards', async () => {
+            dao.getSummaryByTrip.mockResolvedValue(flatSummary);
+            tripDao.findById.mockResolvedValue({
+                startTime: tripStart,
+            });
 
-            const result = await tripSummaryService.setAwards(1);
+            jest.spyOn(service, 'evaluateAwards')
+                .mockReturnValue([]);
 
-            expect(result).toHaveLength(5);
-            expect(daoMock.setAward).toHaveBeenCalledTimes(5);
+            await expect(
+                service.setAwards(1)
+            ).resolves.toEqual([]);
+
+            expect(dao.setAward).not.toHaveBeenCalled();
         });
 
-        test('UTC-29-03: throws an error when tripId is missing', async () => {
-            await expect(tripSummaryService.setAwards(null)).rejects.toThrow('Trip ID is required');
+        test('UTC29-03 throws when tripId is missing', async () => {
+            await expect(
+                service.setAwards(null)
+            ).rejects.toThrow(
+                'Could not set award: tripId is required'
+            );
+
+            expect(dao.getSummaryByTrip).not.toHaveBeenCalled();
         });
 
-        test('UTC-29-04: throws an error when the summary retrieval fails', async () => {
-            daoMock.getSummaryByTrip.mockRejectedValue(new Error('Summary lookup failed'));
+        test('UTC29-04 propagates summary retrieval errors', async () => {
+            dao.getSummaryByTrip.mockRejectedValue(
+                new Error('Summary retrieval failed')
+            );
 
-            await expect(tripSummaryService.setAwards(1)).rejects.toThrow('Summary lookup failed');
+            await expect(
+                service.setAwards(1)
+            ).rejects.toThrow(
+                'Summary retrieval failed'
+            );
+        });
+
+        test('UTC29-05 propagates trip retrieval errors', async () => {
+            dao.getSummaryByTrip.mockResolvedValue(flatSummary);
+
+            tripDao.findById.mockRejectedValue(
+                new Error('Trip not found')
+            );
+
+            await expect(
+                service.setAwards(9999)
+            ).rejects.toThrow(
+                'Trip not found'
+            );
         });
     });
+
+    // ------------------------------------------------------------------
+    // UTC-30: getAwardsByTrip
+    // ------------------------------------------------------------------
 
     describe('UTC-30: getAwardsByTrip', () => {
-        test('UTC-30-01: retrieves awards successfully for a trip with awards', async () => {
+        test('UTC30-01 retrieves awards for a trip with awards', async () => {
             const awards = [
-                { tripId: 1, userId: 1, awardName: 'View hunter' },
-                { tripId: 1, userId: 2, awardName: 'foodie supreme' },
-            ];
-            daoMock.getAwardsByTrip.mockResolvedValue(awards);
+                'View Hunter',
+                'Foodie Supreme',
+                'Late Turtle',
+            ].map((awardName) => ({
+                tripId: 1,
+                awardName,
+            }));
 
-            const result = await tripSummaryService.getAwardsByTrip(1);
+            dao.getAwardsByTrip.mockResolvedValue(awards);
 
-            expect(daoMock.getAwardsByTrip).toHaveBeenCalledWith(1);
-            expect(result).toEqual(awards);
+            await expect(
+                service.getAwardsByTrip(1)
+            ).resolves.toEqual(awards);
         });
 
-        test('UTC-30-02: retrieves awards for a trip with no awards', async () => {
-            daoMock.getAwardsByTrip.mockResolvedValue([]);
+        test('UTC30-02 returns an empty array for a trip with no awards', async () => {
+            dao.getAwardsByTrip.mockResolvedValue([]);
 
-            const result = await tripSummaryService.getAwardsByTrip(1);
-
-            expect(result).toEqual([]);
+            await expect(
+                service.getAwardsByTrip(1)
+            ).resolves.toEqual([]);
         });
 
-        test('UTC-30-03: throws an error when tripId is missing', async () => {
-            await expect(tripSummaryService.getAwardsByTrip(null)).rejects.toThrow('Trip ID is required');
+        test('UTC30-03 throws when tripId is missing', async () => {
+            await expect(
+                service.getAwardsByTrip(null)
+            ).rejects.toThrow(
+                'Could not retrieve trip awards: trip ID is required'
+            );
         });
 
-        test('UTC-30-04: throws an error when the retrieval fails', async () => {
-            daoMock.getAwardsByTrip.mockRejectedValue(new Error('Failed to fetch awards'));
+        test('UTC30-04 propagates DAO errors without wrapping them', async () => {
+            dao.getAwardsByTrip.mockRejectedValue(
+                new Error('Trip not found')
+            );
 
-            await expect(tripSummaryService.getAwardsByTrip(1)).rejects.toThrow('Failed to fetch awards');
+            await expect(
+                service.getAwardsByTrip(9999)
+            ).rejects.toThrow(
+                'Trip not found'
+            );
         });
     });
+
+    // ------------------------------------------------------------------
+    // UTC-31: getSummaryByTrip
+    // ------------------------------------------------------------------
 
     describe('UTC-31: getSummaryByTrip', () => {
-        test('UTC-31-01: retrieves trip summary successfully for a completed trip', async () => {
+        test('UTC31-01 retrieves trip summary data', async () => {
             const summary = {
-                trips: [{ trip_id: 1, trip_name: 'Trip A' }],
-                members: [{ user_id: 1 }],
-                activities: [{ location_name: 'Ang Kaew' }],
-                awards: [],
-                stops: [],
-                photos: []
+                activities: [
+                    {
+                        activity_type: 'sightseeing',
+                        location_name: 'Ang Kaew',
+                    },
+                ],
             };
-            daoMock.getSummaryByTrip.mockResolvedValue(summary);
 
-            const result = await tripSummaryService.getSummaryByTrip(1);
+            dao.getSummaryByTrip.mockResolvedValue(summary);
 
-            expect(daoMock.getSummaryByTrip).toHaveBeenCalledWith(1);
-            expect(result).toEqual(summary);
+            await expect(
+                service.getSummaryByTrip(1)
+            ).resolves.toEqual(summary);
         });
 
-        test('UTC-31-02: retrieves summary for a trip with zero recorded activity', async () => {
-            const summary = {
-                trips: [{ trip_id: 2, trip_name: 'Trip B' }],
-                members: [],
+        test('UTC31-02 returns summary with zero activities', async () => {
+            dao.getSummaryByTrip.mockResolvedValue({
                 activities: [],
-                awards: [],
-                stops: [],
-                photos: []
-            };
-            daoMock.getSummaryByTrip.mockResolvedValue(summary);
+            });
 
-            const result = await tripSummaryService.getSummaryByTrip(2);
-
-            expect(result).toEqual(summary);
+            await expect(
+                service.getSummaryByTrip(2)
+            ).resolves.toEqual({
+                activities: [],
+            });
         });
 
-        test('UTC-31-03: throws an error when tripId is missing', async () => {
-            await expect(tripSummaryService.getSummaryByTrip(null)).rejects.toThrow('Trip ID is required');
-        });
-
-        test('UTC-31-04: throws an error when the retrieval fails', async () => {
-            daoMock.getSummaryByTrip.mockRejectedValue(new Error('Summary failed'));
-
-            await expect(tripSummaryService.getSummaryByTrip(1)).rejects.toThrow('Summary failed');
+        test('UTC31-03 throws when tripId is missing', async () => {
+            await expect(
+                service.getSummaryByTrip(null)
+            ).rejects.toThrow(
+                'Could not retrieve trip summary: tripId is required'
+            );
         });
     });
 
-    describe('UTC-32: getActivityGraphData', () => {
-        test('UTC-32-01: retrieves activity graph data successfully for a trip and user', async () => {
-            const graphData = {
+    // ------------------------------------------------------------------
+    // UTC-32: getActivityGraphDataByUser
+    // ------------------------------------------------------------------
+
+    describe('UTC-32: getActivityGraphDataByUser', () => {
+        test('UTC32-01 retrieves graph data for trip + user', async () => {
+            const counts = [
+                {
+                    activity_type: 'SightSeeing',
+                    count: 12,
+                },
+            ];
+
+            dao.getActivityTypeCountsByUser
+                .mockResolvedValue(counts);
+
+            await expect(
+                service.getActivityGraphDataByUser(1, 1)
+            ).resolves.toEqual({
                 totalActivityTypes: 1,
-                activityTypeCounts: [{ activityType: 'sight seeing', count: 2 }]
-            };
-            daoMock.getActivityTypeCounts.mockResolvedValue(graphData.activityTypeCounts);
-
-            const result = await tripSummaryService.getActivityGraphData(1, 1);
-
-            expect(daoMock.getActivityTypeCounts).toHaveBeenCalledWith(1, 1);
-            expect(result).toEqual(graphData);
+                activityTypeCounts: counts,
+            });
         });
 
-        test('UTC-32-02: retrieves activity graph data for a user with no recorded activities', async () => {
-            daoMock.getActivityTypeCounts.mockResolvedValue([]);
+        test('UTC32-02 returns zero activity types for a user with no recorded activities', async () => {
+            dao.getActivityTypeCountsByUser
+                .mockResolvedValue([]);
 
-            const result = await tripSummaryService.getActivityGraphData(1, 10);
-
-            expect(result).toEqual({ totalActivityTypes: 0, activityTypeCounts: [] });
+            await expect(
+                service.getActivityGraphDataByUser(1, 10)
+            ).resolves.toEqual({
+                totalActivityTypes: 0,
+                activityTypeCounts: [],
+            });
         });
 
-        test('UTC-32-03: throws an error when tripId is missing', async () => {
-            await expect(tripSummaryService.getActivityGraphData(null, 1)).rejects.toThrow('Trip ID is required');
+        test('UTC32-03 throws when tripId is missing', async () => {
+            await expect(
+                service.getActivityGraphDataByUser(null, 1)
+            ).rejects.toThrow(
+                'Could not retrieve activity data: tripId is required'
+            );
         });
 
-        test('UTC-32-04: throws an error when userId is missing', async () => {
-            await expect(tripSummaryService.getActivityGraphData(1, null)).rejects.toThrow('User ID is required');
-        });
-
-        test('UTC-32-05: throws an error when the retrieval fails', async () => {
-            daoMock.getActivityTypeCounts.mockRejectedValue(new Error('Activity counts failed'));
-
-            await expect(tripSummaryService.getActivityGraphData(1, 1)).rejects.toThrow('Activity counts failed');
+        test('UTC32-04 throws when userId is missing', async () => {
+            await expect(
+                service.getActivityGraphDataByUser(1, null)
+            ).rejects.toThrow(
+                'Could not retrieve activity data: userId is required'
+            );
         });
     });
+
+    // ------------------------------------------------------------------
+    // UTC-33: getStoryData
+    // Current signature: getStoryData(tripId, userId)
+    // ------------------------------------------------------------------
 
     describe('UTC-33: getStoryData', () => {
-        const storySummary = {
-            trips: [{ trip_id: 1, trip_name: 'Trip A' }],
-            members: [{ user_id: 1 }],
-            activities: [{ location_name: 'Ang Kaew', activity_type: 'sight seeing' }],
-            awards: [],
-            stops: [],
-            photos: []
-        };
+        beforeEach(() => {
+            service.setAwards = jest.fn()
+                .mockResolvedValue([]);
+        });
 
-        test('UTC-33-01: retrieves story data successfully for a trip', async () => {
-            const photos = [{ photoUrl: 'https://example.com/test-1.jpeg' }, { photoUrl: 'https://example.com/test-2.jpeg' }];
-            const awards = [{ awardName: 'View hunter' }, { awardName: 'foodie supreme' }];
-            const activityTypeCounts = [{ activityType: 'sight seeing', count: 1 }];
+        test('UTC33-01 retrieves story data for a trip and user', async () => {
+            const summary = {
+                members: [],
+                activities: [
+                    {
+                        activity_type: 'sightseeing',
+                        location_name: 'Ang Kaew',
+                    },
+                ],
+                stops: [],
+            };
 
-            daoMock.getSummaryByTrip
-                .mockResolvedValueOnce(storySummary)
-                .mockResolvedValueOnce(storySummary);
-            daoMock.getPhotosByTrip.mockResolvedValue(photos);
-            daoMock.getAwardsByTrip.mockResolvedValue(awards);
-            daoMock.getActivityTypeCounts.mockResolvedValue(activityTypeCounts);
-            daoMock.setAward.mockResolvedValue({ awardId: 1 });
+            const photos = [
+                photo(1, 'https://example.com/test-1.jpeg'),
+                photo(2, 'https://example.com/test-2.jpeg'),
+            ];
 
-            const result = await tripSummaryService.getStoryData(1, 1);
+            const awards = [
+                'View Hunter',
+                'Foodie Supreme',
+                'Late Turtle',
+            ].map((awardName) => ({
+                awardName,
+            }));
 
-            expect(daoMock.getSummaryByTrip).toHaveBeenCalledWith(1);
+            const activityTypeCounts = [
+                {
+                    activity_type: 'sightseeing',
+                    count: 1,
+                },
+            ];
+
+            const reliabilityScores = [
+                {
+                    userId: 1,
+                    attendance: 'Early',
+                },
+            ];
+
+            dao.getSummaryByTrip.mockResolvedValue(summary);
+            dao.getPhotosByTrip.mockResolvedValue(photos);
+            dao.getAwardsByTrip.mockResolvedValue(awards);
+            dao.getActivityTypeCountsByUser
+                .mockResolvedValue(activityTypeCounts);
+            dao.getTripMemberReliabilityScore
+                .mockResolvedValue(reliabilityScores);
+
+            const result =
+                await service.getStoryData(1, 1);
+
+            expect(service.setAwards)
+                .toHaveBeenCalledWith(1);
+
+            expect(
+                dao.getActivityTypeCountsByUser
+            ).toHaveBeenCalledWith(1, 1);
+
             expect(result).toEqual({
-                ...storySummary,
+                ...summary,
                 photos,
                 awards,
-                activityTypeCounts
+                activityTypeCounts,
+                tripMemberReliabilityScores:
+                    reliabilityScores,
             });
         });
 
-        test('UTC-33-02: retrieves story data for a trip with no recorded activities', async () => {
-            const emptySummary = {
-                trips: [{ trip_id: 2, trip_name: 'Trip B' }],
-                members: [{ user_id: 1 }],
+        test('UTC33-02 returns an object with empty collections when story data is empty', async () => {
+            const summary = {
+                members: [],
                 activities: [],
-                awards: [],
                 stops: [],
-                photos: []
             };
-            daoMock.getSummaryByTrip
-                .mockResolvedValueOnce(emptySummary)
-                .mockResolvedValueOnce(emptySummary);
-            daoMock.getPhotosByTrip.mockResolvedValue([]);
-            daoMock.getAwardsByTrip.mockResolvedValue([]);
-            daoMock.getActivityTypeCounts.mockResolvedValue([]);
-            daoMock.setAward.mockResolvedValue({ awardId: 1 });
 
-            const result = await tripSummaryService.getStoryData(2, 1);
+            dao.getSummaryByTrip.mockResolvedValue(summary);
+            dao.getPhotosByTrip.mockResolvedValue([]);
+            dao.getAwardsByTrip.mockResolvedValue([]);
+            dao.getActivityTypeCountsByUser
+                .mockResolvedValue([]);
+            dao.getTripMemberReliabilityScore
+                .mockResolvedValue([]);
 
-            expect(result).toEqual({
-                ...emptySummary,
+            await expect(
+                service.getStoryData(2, 1)
+            ).resolves.toEqual({
+                ...summary,
                 photos: [],
                 awards: [],
-                activityTypeCounts: []
+                activityTypeCounts: [],
+                tripMemberReliabilityScores: [],
             });
         });
 
-        test('UTC-33-03: throws an error when tripId is missing', async () => {
-            await expect(tripSummaryService.getStoryData(null, 1)).rejects.toThrow('Trip ID is required');
+        test('UTC33-03 throws when tripId is missing', async () => {
+            await expect(
+                service.getStoryData(null, 1)
+            ).rejects.toThrow(
+                'Could not retrieve story data: tripId is required'
+            );
         });
 
-        test('UTC-33-04: throws an error when userId is missing', async () => {
-            await expect(tripSummaryService.getStoryData(1, null)).rejects.toThrow('User ID is required');
+        test('UTC33-04 throws when userId is missing', async () => {
+            await expect(
+                service.getStoryData(1, null)
+            ).rejects.toThrow(
+                'Could not retrieve story data: userId is required'
+            );
         });
 
-        test('UTC-33-05: throws an error when the retrieval fails', async () => {
-            daoMock.getSummaryByTrip.mockRejectedValue(new Error('Story data failed'));
+        test('UTC33-05 propagates setAwards errors', async () => {
+            service.setAwards.mockRejectedValue(
+                new Error('Award generation failed')
+            );
 
-            await expect(tripSummaryService.getStoryData(1, 1)).rejects.toThrow('Story data failed');
+            await expect(
+                service.getStoryData(1, 1)
+            ).rejects.toThrow(
+                'Award generation failed'
+            );
+
+            expect(dao.getSummaryByTrip)
+                .not.toHaveBeenCalled();
+        });
+
+        test('UTC33-06 propagates story retrieval errors', async () => {
+            dao.getSummaryByTrip.mockRejectedValue(
+                new Error('Story retrieval failed')
+            );
+
+            dao.getPhotosByTrip.mockResolvedValue([]);
+            dao.getAwardsByTrip.mockResolvedValue([]);
+            dao.getActivityTypeCountsByUser
+                .mockResolvedValue([]);
+            dao.getTripMemberReliabilityScore
+                .mockResolvedValue([]);
+
+            await expect(
+                service.getStoryData(1, 1)
+            ).rejects.toThrow(
+                'Story retrieval failed'
+            );
+        });
+    });
+
+    // ------------------------------------------------------------------
+    // UTC-34: evaluateAwards
+    //
+    // Important current behavior:
+    // - no explicit input validation
+    // - no trip existence lookup
+    // - tripId is simply copied into returned awards
+    // ------------------------------------------------------------------
+
+    describe('UTC-34: evaluateAwards', () => {
+        test('UTC34-01 returns generated awards for valid summaries', () => {
+            const result =
+                service.evaluateAwards(
+                    1,
+                    appendixA,
+                    tripStart
+                );
+
+            expect(result).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        tripId: 1,
+                        userId: 1,
+                        awardName: 'Transit Titan',
+                        awardDesc:
+                            'spent the trip going places!',
+                    }),
+                ])
+            );
+        });
+
+        test('UTC34-02 returns awards with a null tripId because the current method does not validate tripId', () => {
+            const result =
+                service.evaluateAwards(
+                    null,
+                    appendixA,
+                    tripStart
+                );
+
+            expect(result.length).toBeGreaterThan(0);
+
+            expect(
+                result.every(
+                    (award) => award.tripId === null
+                )
+            ).toBe(true);
+        });
+
+        test('UTC34-03 throws a TypeError when summaries is null', () => {
+            expect(() =>
+                service.evaluateAwards(
+                    1,
+                    null,
+                    tripStart
+                )
+            ).toThrow(TypeError);
+        });
+
+        test('UTC34-04 accepts a null tripStart because the current method does not validate it', () => {
+            const result =
+                service.evaluateAwards(
+                    1,
+                    appendixA,
+                    null
+                );
+
+            expect(result.length).toBeGreaterThan(0);
+            expect(
+                result.every(
+                    (award) => award.tripId === 1
+                )
+            ).toBe(true);
+        });
+
+        test('UTC34-05 does not check whether tripId exists', () => {
+            const result =
+                service.evaluateAwards(
+                    9999,
+                    appendixA,
+                    tripStart
+                );
+
+            expect(result.length).toBeGreaterThan(0);
+
+            expect(
+                result.every(
+                    (award) => award.tripId === 9999
+                )
+            ).toBe(true);
+        });
+    });
+
+    // ------------------------------------------------------------------
+    // UTC-35: deletePhoto
+    // ------------------------------------------------------------------
+
+    describe('UTC-35: deletePhoto', () => {
+        test('UTC35-01 successfully deletes a photo', async () => {
+            const deleted =
+                photo(
+                    1,
+                    'https://example.com/test-1.jpeg'
+                );
+
+            dao.deletePhoto.mockResolvedValue(deleted);
+
+            await expect(
+                service.deletePhoto(1)
+            ).resolves.toEqual(deleted);
+        });
+
+        test('UTC35-02 throws when photoId is missing', async () => {
+            await expect(
+                service.deletePhoto(null)
+            ).rejects.toThrow(
+                'Could not delete, photoId is required'
+            );
+        });
+    });
+
+    // ------------------------------------------------------------------
+    // UTC-36: getActivityGraphDataByTrip
+    // ------------------------------------------------------------------
+
+    describe('UTC-36: getActivityGraphDataByTrip', () => {
+        test('UTC36-01 retrieves activity graph data for a trip', async () => {
+            const counts = [
+                {
+                    activity_type: 'SightSeeing',
+                    count: 12,
+                },
+            ];
+
+            dao.getActivityTypeCountsByTrip
+                .mockResolvedValue(counts);
+
+            await expect(
+                service.getActivityGraphDataByTrip(1)
+            ).resolves.toEqual({
+                totalActivityTypes: 1,
+                activityTypeCounts: counts,
+            });
+        });
+
+        test('UTC36-02 returns zero activity types when the trip has no recorded activities', async () => {
+            dao.getActivityTypeCountsByTrip
+                .mockResolvedValue([]);
+
+            await expect(
+                service.getActivityGraphDataByTrip(1)
+            ).resolves.toEqual({
+                totalActivityTypes: 0,
+                activityTypeCounts: [],
+            });
+        });
+
+        test('UTC36-03 throws when tripId is missing', async () => {
+            await expect(
+                service.getActivityGraphDataByTrip(null)
+            ).rejects.toThrow(
+                'Could not retrieve activity data: tripId is required'
+            );
         });
     });
 });

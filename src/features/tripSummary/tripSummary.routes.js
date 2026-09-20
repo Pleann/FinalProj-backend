@@ -15,3 +15,5 @@ router.get('/activityGraphUser', (req, res) => tripSummaryController.getActivity
 router.get('/story', (req, res) => tripSummaryController.getStoryData(req, res));
 
 module.exports = router;
+
+///api/trips/:tripId/summary/awards

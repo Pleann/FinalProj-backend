@@ -9,7 +9,7 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-CREATE TYPE member_attendance AS ENUM ('VeryEarly', 'Early', 'OnTime', 'Late', 'VeryLate', 'Missing', 'Undecided');
+CREATE TYPE member_attendance AS ENUM ('VeryEarly', 'Early', 'OnTime', 'Late', 'VeryLate', 'Missing', 'Undecided', 'Ghost');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

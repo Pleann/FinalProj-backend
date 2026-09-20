@@ -164,7 +164,7 @@ class LocationService {
             }
             const attendance = arrivalTime
                 ? classifyAttendance(arrivalTime.getTime() - startDate.getTime())
-                : 'Missing';
+                : 'Ghost';
 
             const updated = await this.locationDao.updateAttendance(tripId, member.user_id, attendance);
 
