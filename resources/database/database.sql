@@ -9,7 +9,7 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-CREATE TYPE member_attendance AS ENUM ('VeryEarly', 'Early', 'OnTime', 'Late', 'VeryLate', 'Missing', 'Undecided');
+CREATE TYPE member_attendance AS ENUM ('VeryEarly', 'Early', 'OnTime', 'Late', 'VeryLate', 'Missing', 'Undecided', 'Ghost');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -30,9 +30,9 @@ CREATE TABLE IF NOT EXISTS Account (
                                        last_name        VARCHAR(255) NOT NULL,
                                        username         VARCHAR(255) NOT NULL,
                                        email            VARCHAR(255) NOT NULL,
-                                       password         TEXT NOT NULL          -- stores bcrypt hash, never plain text
-                                    -- awards Should be in another table I think
-    );
+                                       password         TEXT NOT NULL,          -- stores bcrypt hash, never plain text
+                                       reliability_score  NUMERIC(5,2) DEFAULT 200.00
+);
 
 CREATE TABLE IF NOT EXISTS Trip (
                                     trip_id          SERIAL PRIMARY KEY,
@@ -92,17 +92,17 @@ CREATE TABLE IF NOT EXISTS Activity (
                                           CONSTRAINT chk_activity_times CHECK (ac_end_time > ac_start_time)
 );
 
-CREATE TABLE IF NOT EXISTS Expense (
-                                          expense_id        SERIAL PRIMARY KEY,
-                                          trip_id           INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
-                                          user_id           INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
-                                          activity_id       INTEGER REFERENCES Activity(activity_id) ON DELETE CASCADE,
-                                          expense_name      VARCHAR(255) NOT NULL,
-                                          amount            NUMERIC(12,2) NOT NULL,
-                                          currency          VARCHAR(5),
-                                          billimage_url     TEXT,
-                                          expense_timestamp TIMESTAMPTZ
-);
+-- CREATE TABLE IF NOT EXISTS Expense (
+--                                           expense_id        SERIAL PRIMARY KEY,
+--                                           trip_id           INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
+--                                           user_id           INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+--                                           activity_id       INTEGER REFERENCES Activity(activity_id) ON DELETE CASCADE,
+--                                           expense_name      VARCHAR(255) NOT NULL,
+--                                           amount            NUMERIC(12,2) NOT NULL,
+--                                           currency          VARCHAR(5),
+--                                           billimage_url     TEXT,
+--                                           expense_timestamp TIMESTAMPTZ
+-- );
 
 CREATE TABLE IF NOT EXISTS Stop (
                                     stop_id     SERIAL PRIMARY KEY,
@@ -126,3 +126,24 @@ CREATE TABLE IF NOT EXISTS Notification (
                                     created_at         TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS TripPhoto (
+                                    photo_id           SERIAL PRIMARY KEY,
+                                    trip_id            INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
+                                    user_id            INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+                                    photo_url          TEXT NOT NULL,
+                                    captured_at        TIMESTAMPTZ,
+                                    location_name      VARCHAR(255),
+                                    latitude           DECIMAL(8,6),
+                                    longitude          DECIMAL(9,6),
+                                    uploaded_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS TripAward (
+                                    award_id           SERIAL PRIMARY KEY,
+                                    trip_id            INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
+                                    user_id            INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+                                    award_name         VARCHAR(255) NOT NULL,
+                                    award_description  TEXT,
+                                    awarded_at         TIMESTAMPTZ DEFAULT NOW(),
+                                    CONSTRAINT award_trip_name_unique UNIQUE (trip_id, award_name)
+);

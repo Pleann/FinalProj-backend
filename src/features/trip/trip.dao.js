@@ -1,6 +1,9 @@
 const pool = require('../../config/db');
 const TripEntity = require('./trip.entity');
 
+console.log('TripEntity:', TripEntity);
+console.log('typeof TripEntity:', typeof TripEntity);
+
 class TripDao {
     async insert(trip, ownerId) {
         const { rows } = await pool.query(

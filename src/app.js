@@ -15,6 +15,7 @@ app.use('/api/trips/:tripId/invites', require('./features/tripInvite/tripInvite.
 app.use('/api/trips/:tripId/members', require('./features/tripMember/tripMember.routes'));
 app.use('/api/trips/:tripId/location', require('./features/tripLocation/tripLocation.routes'));
 app.use('/api/trips/:tripId/activities', require('./features/tripActivity/tripActivity.routes'));
+app.use('/api/trips/:tripId/summary', require('./features/tripSummary/tripSummary.routes'));
 // app.use('/api/trips/:tripId/expenses', require('./features/tripExpense/tripExpense.routes'));
 app.use('/api/users/:userId/notifications', require('./features/tripNotification/tripNotification.routes'));
 app.use('/api/trips', require('./features/trip/trip.routes'));

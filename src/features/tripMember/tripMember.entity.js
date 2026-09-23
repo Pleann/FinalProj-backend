@@ -4,6 +4,7 @@ class TripMemberEntity {
         this.tripId        = row.trip_id;
         this.userId        = row.user_id;
         this.memberStatus  = row.member_status;
+        this.attendance    = row.attendance;
     }
 }
 
