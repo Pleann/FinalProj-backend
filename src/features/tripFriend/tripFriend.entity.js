@@ -1,4 +1,4 @@
-class friendEntity {
+class FriendEntity {
     constructor(rows) {
         this.friendId = rows.friend_id;
         this.userId = rows.user_id;
@@ -7,7 +7,7 @@ class friendEntity {
     }
 }
 
-class friendRequestEntity {
+class FriendRequestEntity {
     constructor(rows) {
         this.requestId = rows.request_id;
         this.senderId = rows.sender_id;
@@ -16,7 +16,7 @@ class friendRequestEntity {
     }
 }
 
-module.exports = {friendEntity, friendRequestEntity}
+module.exports = {FriendEntity, FriendRequestEntity}
 
 // CREATE TABLE IF NOT EXISTS Friend (
 //     friend_id        SERIAL PRIMARY KEY,

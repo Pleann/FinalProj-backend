@@ -24,12 +24,12 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-CREATE TYPE friend_status AS ENUM ('friend', 'not_friend');
+CREATE TYPE friend_status AS ENUM ('friend', 'not_friend', 'undecided');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-CREATE TYPE request_status AS ENUM ('accepted', 'denied');
+CREATE TYPE request_status AS ENUM ('accepted', 'denied', 'undecided');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS Account (
                                        email            VARCHAR(255) NOT NULL,
                                        password         TEXT NOT NULL,          -- stores bcrypt hash, never plain text
                                        reliability_score  NUMERIC(5,2) DEFAULT 200.00
+
 );
 
 CREATE TABLE IF NOT EXISTS Friend (

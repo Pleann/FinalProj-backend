@@ -37,16 +37,18 @@ class TripFriendController {
 
     async getAllFriends(req, res) {
         try {
-            const friends = await this.tripFriendService.getAllFriends();
+            const { userId } = req.query;
+            const friends = await this.tripFriendService.getAllFriends(userId);
             res.status(200).json(friends);
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
     }
-
+    
     async getAllRequests(req, res) {
         try {
-            const requests = await this.tripFriendService.getAllRequests();
+            const { userId } = req.query;
+            const requests = await this.tripFriendService.getAllRequests(userId);
             res.status(200).json(requests);
         } catch (err) {
             res.status(500).json({ error: err.message });

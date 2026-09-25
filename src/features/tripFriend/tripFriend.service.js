@@ -18,12 +18,12 @@ class TripFriendService {
         return await this.tripFriendDao.findRequestById(requestId);
     }
 
-    async getAllFriends() {
-        return await this.tripFriendDao.findAllFriends();
+    async getAllFriends(userId) {
+        return await this.tripFriendDao.findAllFriends(userId);
     }
 
-    async getAllRequests() {
-        return await this.tripFriendDao.findAllRequests();
+    async getAllRequests(userId) {
+        return await this.tripFriendDao.findAllRequests(userId);
     }
 
     async updateFriendStatus(friendId, status) {

@@ -32,15 +32,19 @@ class TripFriendDao {
         return new FriendRequestEntity(rows[0]);
     }
 
-    async findAllFriends() {
-        const { rows } = await pool.query(`SELECT * FROM Friend`);
-
-        return rows.map(row => new TripFriendEntity(row));
+    async findAllFriends(userId) {
+        const { rows } = await pool.query(
+            `SELECT * FROM Friend WHERE user_id = $1 OR friend_user_id = $1`,
+            [userId]
+        );
+        return rows.map(row => new FriendEntity(row));
     }
 
-    async findAllRequests() {
-        const { rows } = await pool.query(`SELECT * FROM FriendRequest`);
-
+    async findAllRequests(userId) {
+        const { rows } = await pool.query(
+            `SELECT * FROM FriendRequest WHERE sender_id = $1 OR receiver_id = $1`,
+            [userId]
+        );
         return rows.map(row => new FriendRequestEntity(row));
     }
 
