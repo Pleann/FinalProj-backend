@@ -11,5 +11,7 @@ router.get('/allFriends', (req, res) => tripFriendController.getAllFriends(req, 
 router.get('/allRequests', (req, res) => tripFriendController.getAllRequests(req, res));
 router.patch('/friend/:friendId', (req, res) => tripFriendController.updateFriendStatus(req, res));
 router.patch('/request/:requestId', (req, res) => tripFriendController.updateRequestStatus(req, res));
+router.get('/recommendations', (req, res) => tripFriendController.getRecommendedFriends(req, res));
+router.get('/search', (req, res) => tripFriendController.getUserByNameFirstName(req, res));
 
 module.exports = router;

@@ -44,7 +44,7 @@ class TripFriendController {
             res.status(500).json({ error: err.message });
         }
     }
-    
+
     async getAllRequests(req, res) {
         try {
             const { userId } = req.query;
@@ -70,8 +70,36 @@ class TripFriendController {
         try {
             const { requestId } = req.params;
             const { status } = req.body;
-            const updatedRequest = await this.tripFriendService.updateRequestStatus(requestId, status);
-            res.status(200).json({ message: 'Request status updated successfully', updatedRequest });
+            const { request, friend } = await this.tripFriendService.updateRequestStatus(requestId, status);
+            res.status(200).json({
+                message: 'Request status updated successfully',
+                updatedRequest: request,
+                friend, // null unless the request was accepted
+            });
+        } catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    }
+
+    async getRecommendedFriends(req, res) {
+        try {
+            // Replace with req.user.userId when JWT authentication is enabled.
+            const userId = req.user?.userId || req.query.userId;
+            const limit = parseInt(req.query.limit, 10) || 10;
+            const recommendations = await this.tripFriendService.getRecommendedFriends(userId, limit);
+            res.status(200).json(recommendations);
+        } catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    }
+
+    async getUserByNameFirstName(req, res) {
+        try {
+            // Replace with req.user.userId when JWT authentication is enabled.
+            const userId = req.user?.userId || req.query.userId;
+            const { q } = req.query;
+            const users = await this.tripFriendService.getUserByNameFirstName(userId, q);
+            res.status(200).json(users);
         } catch (err) {
             res.status(400).json({ error: err.message });
         }

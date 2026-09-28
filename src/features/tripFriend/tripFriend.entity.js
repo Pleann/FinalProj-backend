@@ -13,10 +13,22 @@ class FriendRequestEntity {
         this.senderId = rows.sender_id;
         this.receiverId = rows.receiver_id;
         this.requestStatus = rows.request_status;
+        this.sentAt = rows.sent_at;
     }
 }
 
-module.exports = {FriendEntity, FriendRequestEntity}
+class RecommendedFriendEntity {
+    constructor(row) {
+        this.userId = row.user_id;
+        this.firstName = row.first_name;
+        this.lastName = row.last_name;
+        this.username = row.username;
+        this.profilePicture = row.profile_picture_url;
+        this.sharedTrips = parseInt(row.shared_trips, 10); // COUNT returns a string in pg
+    }
+}
+
+module.exports = { FriendEntity, FriendRequestEntity, RecommendedFriendEntity };
 
 // CREATE TABLE IF NOT EXISTS Friend (
 //     friend_id        SERIAL PRIMARY KEY,

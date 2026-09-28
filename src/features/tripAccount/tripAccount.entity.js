@@ -1,4 +1,4 @@
-class TripAccountEntity {
+class AccountEntity {
     constructor(row) {
         this.userId = row.user_id;
         this.firstName = row.first_name;
@@ -7,9 +7,20 @@ class TripAccountEntity {
         this.email = row.email;
         this.password = row.password;
         this.reliabilityScore = row.reliability_score;
+        this.profilePicture = row.profile_picture_url;
     }
 }
-module.exports = TripAccountEntity;
+
+class AccountTripEntity {
+    constructor(row) {
+        this.userId = row.user_id;
+        this.tripId = row.trip_id;
+        this.tripName = row.trip_name;
+        this.startTime = row.trip_start_time;
+        this.attendance = row.attendance;
+    }
+}
+module.exports = {AccountEntity, AccountTripEntity};
 //                                        user_id          SERIAL PRIMARY KEY,
 //                                        first_name       VARCHAR(255) NOT NULL,
 //                                        last_name        VARCHAR(255) NOT NULL,
