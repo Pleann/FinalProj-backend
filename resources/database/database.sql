@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS Friend (
                                        friend_id        SERIAL PRIMARY KEY,
                                        user_id          INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
                                        friend_user_id   INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
-                                       friend_status    friend_status default 'Undecided',
+                                       friend_status    friend_status default 'friend',
 
                                        CONSTRAINT unique_friendship UNIQUE (user_id, friend_user_id)
 );
