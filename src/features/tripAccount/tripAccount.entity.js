@@ -5,7 +5,7 @@ class AccountEntity {
         this.lastName = row.last_name;
         this.username = row.username;
         this.email = row.email;
-        this.password = row.password;
+        // this.password = row.password;
         this.reliabilityScore = row.reliability_score;
         this.profilePicture = row.profile_picture_url;
     }
@@ -20,7 +20,17 @@ class AccountTripEntity {
         this.attendance = row.attendance;
     }
 }
-module.exports = {AccountEntity, AccountTripEntity};
+
+class AccountAwardEntity {
+    constructor(row) {
+        this.awardId = row.award_id;
+        this.tripId = row.trip_id;
+        this.tripName = row.trip_name;
+        this.awardName = row.award_name;
+        this.awardDescription = row.award_description;
+    }
+}
+module.exports = {AccountEntity, AccountTripEntity, AccountAwardEntity};
 //                                        user_id          SERIAL PRIMARY KEY,
 //                                        first_name       VARCHAR(255) NOT NULL,
 //                                        last_name        VARCHAR(255) NOT NULL,

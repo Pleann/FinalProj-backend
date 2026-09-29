@@ -174,7 +174,7 @@ class TripSummaryDao {
     async getTripMemberReliabilityScore(tripId) {
         const { rows } = await pool.query(
             `SELECT tm.participant_id, tm.trip_id, tm.user_id, tm.attendance,
-                    a.username, a.reliability_score
+                    a.username, a.reliability_score, a.profile_picture_url
              FROM TripMember tm
                       JOIN Account a ON a.user_id = tm.user_id
              WHERE tm.trip_id = $1`,

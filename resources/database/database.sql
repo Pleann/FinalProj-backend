@@ -36,12 +36,15 @@ END $$;
 CREATE TABLE IF NOT EXISTS Account (
                                        user_id          SERIAL PRIMARY KEY,
                                        first_name       VARCHAR(255) NOT NULL,
-                                       last_name        VARCHAR(255) NOT NULL,
+                                       last_name        VARCHAR(255),
                                        username         VARCHAR(255) NOT NULL,
                                        email            VARCHAR(255) NOT NULL,
                                        password         TEXT NOT NULL,          -- stores bcrypt hash, never plain text
                                        reliability_score  NUMERIC(5,2) DEFAULT 200.00,
                                        profile_picture_url TEXT
+
+                                       CONSTRAINT unique_username UNIQUE (username),
+                                       CONSTRAINT unique_email UNIQUE (email)
 );
 
 CREATE TABLE IF NOT EXISTS Friend (

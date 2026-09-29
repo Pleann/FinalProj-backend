@@ -3,6 +3,9 @@ const TripFriendController = require('./tripFriend.controller');
 
 const router = express.Router({ mergeParams: true })
 const tripFriendController = new TripFriendController();
+const authenticate = require('../../middleware/auth.middleware');
+
+router.use(authenticate);
 
 router.post('/sendRequest', (req, res) => tripFriendController.sendRequest(req, res));
 router.get('/friend/:friendId', (req, res) => tripFriendController.getFriendById(req, res));

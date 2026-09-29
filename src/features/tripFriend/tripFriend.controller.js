@@ -7,7 +7,8 @@ class TripFriendController {
 
     async sendRequest(req, res) {
         try {
-            const { senderId, receiverId } = req.body;
+            const senderId = req.user.userId;
+            const { receiverId } = req.body;
             const request = await this.tripFriendService.sendRequest(senderId, receiverId);
             res.status(201).json({ message: 'Friend request sent successfully', request });
         } catch (err) {
@@ -37,8 +38,7 @@ class TripFriendController {
 
     async getAllFriends(req, res) {
         try {
-            const { userId } = req.query;
-            const friends = await this.tripFriendService.getAllFriends(userId);
+            const friends = await this.tripFriendService.getAllFriends(req.user.userId);
             res.status(200).json(friends);
         } catch (err) {
             res.status(500).json({ error: err.message });
@@ -47,8 +47,7 @@ class TripFriendController {
 
     async getAllRequests(req, res) {
         try {
-            const { userId } = req.query;
-            const requests = await this.tripFriendService.getAllRequests(userId);
+            const requests = await this.tripFriendService.getAllRequests(req.user.userId);
             res.status(200).json(requests);
         } catch (err) {
             res.status(500).json({ error: err.message });
@@ -70,12 +69,8 @@ class TripFriendController {
         try {
             const { requestId } = req.params;
             const { status } = req.body;
-            const { request, friend } = await this.tripFriendService.updateRequestStatus(requestId, status);
-            res.status(200).json({
-                message: 'Request status updated successfully',
-                updatedRequest: request,
-                friend, // null unless the request was accepted
-            });
+            const { request, friend } = await this.tripFriendService.updateRequestStatus(requestId, status, req.user.userId);
+            res.status(200).json({ message: 'Request status updated successfully', updatedRequest: request, friend });
         } catch (err) {
             res.status(400).json({ error: err.message });
         }
@@ -83,10 +78,8 @@ class TripFriendController {
 
     async getRecommendedFriends(req, res) {
         try {
-            // Replace with req.user.userId when JWT authentication is enabled.
-            const userId = req.user?.userId || req.query.userId;
             const limit = parseInt(req.query.limit, 10) || 10;
-            const recommendations = await this.tripFriendService.getRecommendedFriends(userId, limit);
+            const recommendations = await this.tripFriendService.getRecommendedFriends(req.user.userId, limit);
             res.status(200).json(recommendations);
         } catch (err) {
             res.status(400).json({ error: err.message });
@@ -95,10 +88,8 @@ class TripFriendController {
 
     async getUserByNameFirstName(req, res) {
         try {
-            // Replace with req.user.userId when JWT authentication is enabled.
-            const userId = req.user?.userId || req.query.userId;
             const { q } = req.query;
-            const users = await this.tripFriendService.getUserByNameFirstName(userId, q);
+            const users = await this.tripFriendService.getUserByNameFirstName(req.user.userId, q);
             res.status(200).json(users);
         } catch (err) {
             res.status(400).json({ error: err.message });

@@ -30,10 +30,17 @@ class TripFriendService {
         return this.tripFriendDao.updateFriendStatus(friendId, status);
     }
 
-    async updateRequestStatus(requestId, status) {
+    async updateRequestStatus(requestId, status, userId) {
         if (!requestId) throw new Error('Request ID is required');
         const allowed = ['accepted', 'declined'];
         if (!allowed.includes(status)) throw new Error('Invalid status');
+
+        const existing = await this.tripFriendDao.findRequestById(requestId);
+        if (!existing) throw new Error('Request not found');
+        if (String(existing.receiverId) !== String(userId)) {
+            throw new Error('Only the recipient can respond to this request');
+        }
+
         return this.tripFriendDao.updateRequestStatus(requestId, status);
     }
 

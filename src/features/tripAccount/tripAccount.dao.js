@@ -1,5 +1,5 @@
 const pool = require('../../config/db');
-const {AccountEntity, AccountTripEntity} = require('./tripAccount.entity');
+const {AccountEntity, AccountTripEntity, AccountAwardEntity} = require('./tripAccount.entity');
 
 class TripAccountDao {
     async insertAccount(a) {
@@ -36,6 +36,14 @@ class TripAccountDao {
         return new AccountEntity(rows[0]);
     }
 
+    async findAuthByUsername(username) {
+        const { rows } = await pool.query(
+            `SELECT * FROM Account WHERE username = $1`,
+            [username]
+        );
+        return rows[0] || null;
+    }
+
     async findAccountById(userId) {
         const {rows} = await pool.query(
             `SELECT * FROM Account WHERE user_id = $1`,
@@ -58,7 +66,8 @@ class TripAccountDao {
                 tm.attendance,
                 t.trip_id,
                 t.trip_name,
-                t.trip_start_time
+                t.trip_start_time,
+                t.trip_status
          FROM Account a
          JOIN TripMember tm ON tm.user_id = a.user_id
          JOIN Trip t ON t.trip_id = tm.trip_id
@@ -67,6 +76,38 @@ class TripAccountDao {
             [userId]
         );
         return rows.map(row => new AccountTripEntity(row));
+    }
+
+    async usernameExists(username) {
+        const { rows } = await pool.query(
+            `SELECT 1 FROM Account WHERE username = $1 LIMIT 1`,
+            [username]
+        );
+        return rows.length > 0;
+    }
+
+    async emailExists(email) {
+        const { rows } = await pool.query(
+            `SELECT 1 FROM Account WHERE email = $1 LIMIT 1`,
+            [email]
+        );
+        return rows.length > 0;
+    }
+
+    async findAwardsByUserId(userId) {
+        const { rows } = await pool.query(
+            `SELECT ta.award_id,
+                ta.trip_id,
+                t.trip_name,
+                ta.award_name,
+                ta.award_description
+         FROM TripAward ta
+         JOIN Trip t ON t.trip_id = ta.trip_id
+         WHERE ta.user_id = $1
+         ORDER BY ta.award_id DESC`,
+            [userId]
+        );
+        return rows.map(row => new AccountAwardEntity(row));
     }
 
     async deleteAccount(userId) {
