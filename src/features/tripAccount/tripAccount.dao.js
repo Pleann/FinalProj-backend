@@ -1,5 +1,5 @@
 const pool = require('../../config/db');
-const {AccountEntity, AccountTripEntity, AccountAwardEntity} = require('./tripAccount.entity');
+const {AccountEntity, AccountTripEntity, AccountAwardEntity, LeaderboardEntity} = require('./tripAccount.entity');
 
 class TripAccountDao {
     async insertAccount(a) {
@@ -44,6 +44,17 @@ class TripAccountDao {
         return rows[0] || null;
     }
 
+    async getLeaderboard(limit) {
+        const { rows } = await pool.query(
+            `SELECT user_id, first_name, last_name, username, profile_picture_url, reliability_score
+            FROM Account
+            ORDER BY reliability_score DESC
+            LIMIT $1`,
+            [limit]
+        );
+        return rows.map(row => new LeaderboardEntity(row));
+    }
+
     async findAccountById(userId) {
         const {rows} = await pool.query(
             `SELECT * FROM Account WHERE user_id = $1`,
@@ -66,7 +77,7 @@ class TripAccountDao {
                 tm.attendance,
                 t.trip_id,
                 t.trip_name,
-                t.trip_start_time,
+                t.trip_start_date,
                 t.trip_status
          FROM Account a
          JOIN TripMember tm ON tm.user_id = a.user_id

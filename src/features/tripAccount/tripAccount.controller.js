@@ -38,6 +38,16 @@ class TripAccountController {
         }
     }
 
+    async getLeaderboard(req, res) {
+        try {
+            const limit = parseInt(req.query.limit, 10) || 50;
+            const leaderboard = await this.tripAccountService.getLeaderboard(limit);
+            res.status(200).json(leaderboard);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    }
+
     async getAccountById(req, res) {
         try {
             const {userId} = req.params;

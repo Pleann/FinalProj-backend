@@ -31,12 +31,41 @@ class TripFriendService {
     }
 
     async updateRequestStatus(requestId, status, userId) {
-        if (!requestId) throw new Error('Request ID is required');
-        const allowed = ['accepted', 'declined'];
-        if (!allowed.includes(status)) throw new Error('Invalid status');
+        console.log('SERVICE UPDATE REQUEST:', {
+            requestId,
+            status,
+            userId
+        });
+
+        if (!requestId) {
+            throw new Error('Request ID is required');
+        }
+
+        const allowed = ['accepted', 'denied'];
+
+        console.log('STATUS CHECK:', {
+            status,
+            allowed,
+            isAllowed: allowed.includes(status),
+        });
+
+        if (!allowed.includes(status)) {
+            throw new Error('Invalid status');
+        }
 
         const existing = await this.tripFriendDao.findRequestById(requestId);
-        if (!existing) throw new Error('Request not found');
+
+        console.log('EXISTING REQUEST:', existing);
+
+        if (!existing) {
+            throw new Error('Request not found');
+        }
+
+        console.log('RECIPIENT CHECK:', {
+            receiverId: existing.receiverId,
+            loggedInUserId: userId,
+        });
+
         if (String(existing.receiverId) !== String(userId)) {
             throw new Error('Only the recipient can respond to this request');
         }

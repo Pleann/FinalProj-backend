@@ -24,33 +24,76 @@ class TripFriendDao {
     }
 
     async findRequestById(requestId) {
-        const { rows } = await pool.query(
-            `SELECT * FROM FriendRequest WHERE request_id = $1`,
-            [requestId]
-        );
+    console.log('FIND REQUEST BY ID:', requestId);
 
-        if (rows.length === 0) throw new Error('Friend request not found');
-        return new FriendRequestEntity(rows[0]);
+    const { rows } = await pool.query(
+        `SELECT *
+         FROM FriendRequest
+         WHERE request_id = $1`,
+        [requestId]
+    );
+
+    console.log('FIND REQUEST RESULT:', rows);
+
+    if (rows.length === 0) {
+        return null;
     }
+
+    return new FriendRequestEntity(rows[0]);
+}
 
     async findAllFriends(userId) {
         const { rows } = await pool.query(
-            `SELECT * FROM Friend WHERE user_id = $1 OR friend_user_id = $1`,
+            `SELECT
+                f.friend_id,
+                f.user_id,
+                f.friend_user_id,
+                f.friend_status,
+                a.user_id AS friend_account_id,
+                a.username,
+                a.profile_picture_url
+            FROM Friend f
+            JOIN Account a
+            ON a.user_id = CASE
+                    WHEN f.user_id = $1 THEN f.friend_user_id
+                    ELSE f.user_id
+                END
+            WHERE f.user_id = $1
+                OR f.friend_user_id = $1`,
             [userId]
         );
-        if (rows.length === 0) throw new Error('Friend not found');
 
-        return rows.map(row => new FriendEntity(row));
+        if (rows.length === 0) {
+            throw new Error('Friend not found');
+        }
+
+        return rows.map(row => ({
+            friendId: row.friend_id,
+            userId: row.user_id,
+            friendUserId: row.friend_user_id,
+            friendStatus: row.friend_status,
+            friendAccountId: row.friend_account_id,
+            username: row.username,
+            profilePicture: row.profile_picture_url,
+        }));
     }
 
     async findAllRequests(userId) {
         const { rows } = await pool.query(
-            `SELECT * FROM FriendRequest WHERE sender_id = $1 OR receiver_id = $1`,
+            `SELECT *
+            FROM FriendRequest
+            WHERE sender_id = $1
+                OR receiver_id = $1`,
             [userId]
         );
 
-        if (rows.length === 0) throw new Error('Friend request not found');
-        return rows.map(row => new FriendRequestEntity(row));
+        if (rows.length === 0) {
+            throw new Error('Friend request not found');
+        }
+
+        return rows.map(
+            row => new FriendRequestEntity(row)
+        );
     }
 
     async updateFriendStatus(friendId, status) {
@@ -64,47 +107,62 @@ class TripFriendDao {
 
     async updateRequestStatus(requestId, status) {
         const client = await pool.connect();
+
         try {
             await client.query('BEGIN');
 
-            // Only a pending request can be answered
+            console.log('UPDATE FRIEND REQUEST:', {
+                requestId,
+                status,
+            });
+
             const { rows } = await client.query(
                 `UPDATE FriendRequest
-             SET request_status = $1
-             WHERE request_id = $2 AND request_status = 'pending'
-             RETURNING *`,
+                SET request_status = $1
+                WHERE request_id = $2
+                RETURNING *`,
                 [status, requestId]
             );
+
+            console.log('UPDATED ROWS:', rows);
+
             if (rows.length === 0) {
-                throw new Error('Request not found or already answered');
+                throw new Error('Friend request not found');
             }
 
             const request = new FriendRequestEntity(rows[0]);
+
             let friend = null;
 
             if (status === 'accepted') {
-                // WHERE NOT EXISTS stops duplicate friendships in either direction
                 const { rows: friendRows } = await client.query(
                     `INSERT INTO Friend (user_id, friend_user_id)
-                 SELECT $1, $2
-                 WHERE NOT EXISTS (
-                     SELECT 1 FROM Friend
-                     WHERE (user_id = $1 AND friend_user_id = $2)
-                        OR (user_id = $2 AND friend_user_id = $1)
-                 )
-                 RETURNING *`,
+                    SELECT $1, $2
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM Friend
+                        WHERE (user_id = $1 AND friend_user_id = $2)
+                            OR (user_id = $2 AND friend_user_id = $1)
+                    )
+                    RETURNING *`,
                     [request.senderId, request.receiverId]
                 );
-                if (friendRows.length > 0) friend = new FriendEntity(friendRows[0]);
+
+                if (friendRows.length > 0) {
+                    friend = new FriendEntity(friendRows[0]);
+                }
             }
 
             await client.query('COMMIT');
-            return { request, friend };
+
+            return {
+                request,
+                friend,
+            };
         } catch (err) {
             await client.query('ROLLBACK');
             throw err;
         } finally {
-            client.release(); // always return the client to the pool
+            client.release();
         }
     }
 

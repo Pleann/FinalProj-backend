@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS Account (
                                        email            VARCHAR(255) NOT NULL,
                                        password         TEXT NOT NULL,          -- stores bcrypt hash, never plain text
                                        reliability_score  NUMERIC(5,2) DEFAULT 200.00,
-                                       profile_picture_url TEXT
+                                       profile_picture_url TEXT,
 
                                        CONSTRAINT unique_username UNIQUE (username),
                                        CONSTRAINT unique_email UNIQUE (email)
@@ -60,8 +60,8 @@ CREATE TABLE IF NOT EXISTS FriendRequest (
                                        request_id       SERIAL PRIMARY KEY,
                                        sender_id        INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
                                        receiver_id      INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
-                                       request_status   request_status default 'Undecided',
-                                       sent_at          TIMESTAMPTZ DEFAULT NOW()
+                                       request_status   request_status default 'undecided',
+                                       sent_at          TIMESTAMPTZ DEFAULT NOW(),
 
                                        CONSTRAINT unique_friend_request UNIQUE (sender_id, receiver_id)
 );

@@ -9,15 +9,23 @@ class TripController {
     async createTrip(req, res) {
         try {
             const dto = new CreateTripDto(req.body);
-            // ownerId will come from JWT later — hardcoded for now
-            const ownerId = 1;
-            const trip = await this.tripService.createTrip(dto, ownerId, req.file);
+
+            const ownerId = req.user.userId;
+
+            const trip = await this.tripService.createTrip(
+                dto,
+                ownerId,
+                req.file
+            );
+
             res.status(201).json({
                 message: 'Trip created successfully',
-                trip: new TripResponseDto(trip),
+                trip: new TripResponseDto(trip)
             });
         } catch (err) {
-            res.status(400).json({ error: err.message });
+            res.status(400).json({
+                error: err.message
+            });
         }
     }
 
@@ -33,8 +41,13 @@ class TripController {
 
     async getUpcomingTrips(req, res) {
         try {
-            const trips = await this.tripService.getUpcomingTrips();
-            res.status(200).json(trips.map(trip => new TripResponseDto(trip)));
+            const userId = req.user.userId;
+
+            const trips = await this.tripService.getUpcomingTrips(userId);
+
+            res.status(200).json(
+                trips.map(trip => new TripResponseDto(trip))
+            );
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
@@ -42,8 +55,13 @@ class TripController {
 
     async getActiveTrips(req, res) {
         try {
-            const trips = await this.tripService.getActiveTrips();
-            res.status(200).json(trips.map(trip => new TripResponseDto(trip)));
+            const userId = req.user.userId;
+
+            const trips = await this.tripService.getActiveTrips(userId);
+
+            res.status(200).json(
+                trips.map(trip => new TripResponseDto(trip))
+            );
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
@@ -51,8 +69,13 @@ class TripController {
 
     async getCompletedTrips(req, res) {
         try {
-            const trips = await this.tripService.getCompletedTrips();
-            res.status(200).json(trips.map(trip => new TripResponseDto(trip)));
+            const userId = req.user.userId;
+
+            const trips = await this.tripService.getCompletedTrips(userId);
+
+            res.status(200).json(
+                trips.map(trip => new TripResponseDto(trip))
+            );
         } catch (err) {
             res.status(500).json({ error: err.message });
         }

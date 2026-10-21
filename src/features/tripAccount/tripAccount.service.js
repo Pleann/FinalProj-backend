@@ -8,6 +8,11 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '90d';
 
 
+// (async () => {
+//     const hash = await bcrypt.hash('notSecurePassword6', 10);
+//     console.log(hash);
+// })();
+
 //add error catching!!
 class tripAccountService {
     constructor() {
@@ -15,7 +20,7 @@ class tripAccountService {
     }
 
     async createAccount(firstName, lastName, username, email, password, file) {
-        if (!firstName || !lastName || !username || !email || !password) {
+        if (!firstName || !username || !email || !password) {
             throw new Error('All fields are required');
         }
         if (password.length < 8) {
@@ -59,12 +64,21 @@ class tripAccountService {
             throw new Error('Username and password are required');
         }
 
+        console.log('LOGIN USERNAME:', username);
+
         const row = await this.dao.findAuthByUsername(username);
+        console.log('LOGIN ROW:', row ? {
+                user_id: row.user_id,
+                username: row.username,
+                hasPassword: !!row.password,
+                passwordLength: row.password?.length,
+            } : null);
         if (!row) {
             throw new Error('Invalid username or password');
         }
 
         const isMatch = await bcrypt.compare(password, row.password);
+        console.log('PASSWORD MATCH:', isMatch);
         if (!isMatch) {
             throw new Error('Invalid username or password');
         }
@@ -77,6 +91,10 @@ class tripAccountService {
 
         const account = new AccountEntity(row);
         return { account, token };
+    }
+
+    async getLeaderboard(limit) {
+        return this.dao.getLeaderboard(limit);
     }
 
     async getAccountById(userId) {

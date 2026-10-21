@@ -30,21 +30,27 @@ class TripService {
         return trips;
     }
 
-    async getUpcomingTrips() {
-        const trips = await this.dao.findByStatus('Upcoming');
+    async getUpcomingTrips(userId) {
+        const trips = await this.dao.findByStatus('Upcoming', userId);
+
         if (!trips) throw new Error('Could not find upcoming trips');
+
         return trips;
     }
 
-    async getActiveTrips() {
-        const trips = await this.dao.findByStatus('Active');
+    async getActiveTrips(userId) {
+        const trips = await this.dao.findByStatus('Active', userId);
+
         if (!trips) throw new Error('Could not find Active trips');
+
         return trips;
     }
 
-    async getCompletedTrips() {
-        const trips = await this.dao.findByStatus('Completed');
+    async getCompletedTrips(userId) {
+        const trips = await this.dao.findByStatus('Completed', userId);
+
         if (!trips) throw new Error('Could not find completed trips');
+
         return trips;
     }
 
