@@ -2,11 +2,11 @@ const pool = require('../../config/db');
 const {AccountEntity, AccountTripEntity, AccountAwardEntity, LeaderboardEntity} = require('./tripAccount.entity');
 
 class TripAccountDao {
-    async insertAccount(a) {
+    async insertAccount(tripAccount) {
         const { rows } = await pool.query(
             `INSERT INTO Account (first_name, last_name, username, email, password, profile_picture_url)
              VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [a.firstName, a.lastName, a.username, a.email, a.password, a.profilePictureUrl ?? null]
+            [tripAccount.firstName, tripAccount.lastName, tripAccount.username, tripAccount.email, tripAccount.password, tripAccount.profilePictureUrl ?? null]
         );
         return new AccountEntity(rows[0]);
     }
