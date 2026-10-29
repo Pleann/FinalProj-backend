@@ -116,6 +116,60 @@ class TripAccountController {
             res.status(404).json({error: err.message});
         }
     }
+
+    async forgotPassword(req, res) {
+        try {
+            const { email } = req.body;
+
+            const result = await this.tripAccountService.forgotPassword(email);
+
+            return res.status(200).json(result);
+        } catch (error) {
+            console.error('Forgot password error:', error.message);
+
+            return res.status(500).json({
+                message: 'Unable to process password reset request'
+            });
+        }
+    }
+
+    async verifyResetOtp(req, res) {
+        try {
+            const { email, otp } = req.body;
+
+            const result = await this.tripAccountService.verifyResetOtp(
+                email,
+                otp
+            );
+
+            return res.status(200).json(result);
+        } catch (error) {
+            console.error('Verify reset OTP error:', error.message);
+
+            return res.status(400).json({
+                message: error.message
+            });
+        }
+    }
+
+    async resetPassword(req, res) {
+        try {
+            const { resetToken, newPassword } = req.body;
+
+            const result = await this.tripAccountService.resetPassword(
+                resetToken,
+                newPassword
+            );
+
+            return res.status(200).json(result);
+        } catch (error) {
+            console.error('Reset password error:', error.message);
+
+            return res.status(400).json({
+                message: error.message
+            });
+        }
+    }
 }
 
 module.exports = TripAccountController;

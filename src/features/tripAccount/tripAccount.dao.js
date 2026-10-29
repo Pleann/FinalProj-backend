@@ -129,6 +129,110 @@ class TripAccountDao {
         if (rows.length === 0) throw new Error('Trip account not found');
         return new AccountEntity(rows[0]);
     }
+
+    // Find an account using its email address
+    async findAccountByEmail(email) {
+        const { rows } = await pool.query(
+            `SELECT user_id, email
+         FROM Account
+         WHERE LOWER(email) = LOWER($1)
+         LIMIT 1`,
+            [email]
+        );
+
+        return rows[0] || null;
+    }
+
+// Retrieve the current OTP reset information for an account
+    async findPasswordResetByEmail(email) {
+        const { rows } = await pool.query(
+            `SELECT
+            user_id,
+            email,
+            reset_otp_hash,
+            reset_otp_expires_at,
+            reset_otp_attempts
+         FROM Account
+         WHERE LOWER(email) = LOWER($1)
+         LIMIT 1`,
+            [email]
+        );
+
+        return rows[0] || null;
+    }
+
+// Save a new OTP hash and its expiration time
+    async savePasswordResetOtp(userId, otpHash, expiresAt) {
+        const { rows } = await pool.query(
+            `UPDATE Account
+         SET reset_otp_hash = $1,
+             reset_otp_expires_at = $2,
+             reset_otp_attempts = 0,
+             reset_verified_token_hash = NULL,
+             reset_verified_expires_at = NULL
+         WHERE user_id = $3
+         RETURNING user_id`,
+            [otpHash, expiresAt, userId]
+        );
+
+        return rows.length > 0;
+    }
+
+// Increment OTP attempts, provided the OTP is still valid
+// and the maximum number of attempts has not been reached
+    async incrementPasswordResetAttempts(userId) {
+        const { rows } = await pool.query(
+            `UPDATE Account
+         SET reset_otp_attempts = reset_otp_attempts + 1
+         WHERE user_id = $1
+           AND reset_otp_hash IS NOT NULL
+           AND reset_otp_expires_at > NOW()
+           AND reset_otp_attempts < 5
+         RETURNING reset_otp_attempts`,
+            [userId]
+        );
+
+        return rows[0]?.reset_otp_attempts ?? null;
+    }
+
+// Save a verified reset token and invalidate the OTP
+    async saveVerifiedResetToken(userId, otpHash, tokenHash, expiresAt) {
+        const { rows } = await pool.query(
+            `UPDATE Account
+         SET reset_verified_token_hash = $1,
+             reset_verified_expires_at = $2,
+             reset_otp_hash = NULL,
+             reset_otp_expires_at = NULL,
+             reset_otp_attempts = 0
+         WHERE user_id = $3
+           AND reset_otp_hash = $4
+           AND reset_otp_expires_at > NOW()
+           AND reset_otp_attempts < 5
+         RETURNING user_id`,
+            [tokenHash, expiresAt, userId, otpHash]
+        );
+
+        return rows.length > 0;
+    }
+
+// Update the password using a valid reset token and clear reset data
+    async updatePasswordAndClearReset(tokenHash, hashedPassword) {
+        const { rows } = await pool.query(
+            `UPDATE Account
+         SET password = $1,
+             reset_otp_hash = NULL,
+             reset_otp_expires_at = NULL,
+             reset_otp_attempts = 0,
+             reset_verified_token_hash = NULL,
+             reset_verified_expires_at = NULL
+         WHERE reset_verified_token_hash = $2
+           AND reset_verified_expires_at > NOW()
+         RETURNING user_id`,
+            [hashedPassword, tokenHash]
+        );
+
+        return rows.length > 0;
+    }
 }
 
 module.exports = TripAccountDao;

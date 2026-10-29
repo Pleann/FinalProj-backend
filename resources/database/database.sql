@@ -42,6 +42,11 @@ CREATE TABLE IF NOT EXISTS Account (
                                        password         TEXT NOT NULL,          -- stores bcrypt hash, never plain text
                                        reliability_score  NUMERIC(5,2) DEFAULT 200.00,
                                        profile_picture_url TEXT,
+                                       reset_otp_hash TEXT,
+                                       reset_otp_expiration TIMESTAMPTZ,
+                                       reset_otp_attempts INTEGER NOT NULL DEFAULT 0,
+                                       reset_verified_token_hash TEXT,
+                                       reset_verified_expires_at TIMESTAMPTZ,
 
                                        CONSTRAINT unique_username UNIQUE (username),
                                        CONSTRAINT unique_email UNIQUE (email)
