@@ -13,13 +13,14 @@ router.post('/forgot-password', (req, res) => tripAccountController.forgotPasswo
 router.post('/verify-reset-otp', (req, res) => tripAccountController.verifyResetOtp(req, res));
 router.post('/reset-password', (req, res) => tripAccountController.resetPassword(req, res));
 router.get('/leaderboard', (req, res) => tripAccountController.getLeaderboard(req, res));
-router.get('/:userId', (req, res) => tripAccountController.getAccountById(req, res));
 router.get('/all', (req, res) => tripAccountController.getAllAccounts(req, res));
-router.get('/:userId/trips', (req, res) => tripAccountController.getAccountTrips(req, res));
 router.get('/checkUsername', (req, res) => tripAccountController.checkUsername(req, res));
 router.get('/checkEmail', (req, res) => tripAccountController.checkEmail(req, res));
+router.get('/:userId', (req, res) => tripAccountController.getAccountById(req, res));
+router.get('/:userId/trips', (req, res) => tripAccountController.getAccountTrips(req, res));
 router.get('/:userId/awards', authenticate, (req, res) => tripAccountController.getAwardsByUserId(req, res));
 router.delete('/:userId', (req, res) => tripAccountController.deleteAccount(req, res));
+
 
 
 module.exports = router;
