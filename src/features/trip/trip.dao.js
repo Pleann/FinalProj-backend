@@ -39,11 +39,16 @@ class TripDao {
         return new TripEntity(rows[0]);
     }
 
-    async findByStatus(status) {
+    async findByStatus(status, userId) {
         const { rows } = await pool.query(
-            `SELECT * FROM trip WHERE trip_status = $1`,
-            [status]
+            `SELECT t.*
+            FROM trip t
+            JOIN tripmember tm ON tm.trip_id = t.trip_id
+            WHERE t.trip_status = $1
+            AND tm.user_id = $2`,
+            [status, userId]
         );
+
         return rows.map(row => new TripEntity(row));
     }
 

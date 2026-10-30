@@ -19,19 +19,56 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-CREATE TYPE notification_type AS ENUM ('TripStarted', 'Invite');
+CREATE TYPE notification_type AS ENUM ('TripStarted', 'Invite', 'FriendRequest', 'TripUpdate', 'TripCancelled', 'TripCompleted');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+DO $$ BEGIN
+CREATE TYPE friend_status AS ENUM ('friend', 'not_friend', 'undecided');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+CREATE TYPE request_status AS ENUM ('accepted', 'denied', 'undecided');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS Account (
                                        user_id          SERIAL PRIMARY KEY,
                                        first_name       VARCHAR(255) NOT NULL,
-                                       last_name        VARCHAR(255) NOT NULL,
+                                       last_name        VARCHAR(255),
                                        username         VARCHAR(255) NOT NULL,
                                        email            VARCHAR(255) NOT NULL,
                                        password         TEXT NOT NULL,          -- stores bcrypt hash, never plain text
-                                       reliability_score  NUMERIC(5,2) DEFAULT 200.00
+                                       reliability_score  NUMERIC(5,2) DEFAULT 200.00,
+                                       profile_picture_url TEXT,
+                                       reset_otp_hash TEXT,
+                                       reset_otp_expiration TIMESTAMPTZ,
+                                       reset_otp_attempts INTEGER NOT NULL DEFAULT 0,
+                                       reset_verified_token_hash TEXT,
+                                       reset_verified_expires_at TIMESTAMPTZ,
+
+                                       CONSTRAINT unique_username UNIQUE (username),
+                                       CONSTRAINT unique_email UNIQUE (email)
+);
+
+CREATE TABLE IF NOT EXISTS Friend (
+                                       friend_id        SERIAL PRIMARY KEY,
+                                       user_id          INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+                                       friend_user_id   INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+                                       friend_status    friend_status default 'friend',
+
+                                       CONSTRAINT unique_friendship UNIQUE (user_id, friend_user_id)
+);
+
+CREATE TABLE IF NOT EXISTS FriendRequest (
+                                       request_id       SERIAL PRIMARY KEY,
+                                       sender_id        INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+                                       receiver_id      INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
+                                       request_status   request_status default 'undecided',
+                                       sent_at          TIMESTAMPTZ DEFAULT NOW(),
+
+                                       CONSTRAINT unique_friend_request UNIQUE (sender_id, receiver_id)
 );
 
 CREATE TABLE IF NOT EXISTS Trip (
@@ -118,7 +155,7 @@ CREATE TABLE IF NOT EXISTS Stop (
 CREATE TABLE IF NOT EXISTS Notification (
                                     notification_id   SERIAL PRIMARY KEY,
                                     user_id            INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
-                                    trip_id            INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
+                                    trip_id            INTEGER REFERENCES Trip(trip_id) ON DELETE CASCADE,
                                     title              TEXT NOT NULL,
                                     message            TEXT NOT NULL,
                                     reference_id       INTEGER,
@@ -145,5 +182,6 @@ CREATE TABLE IF NOT EXISTS TripAward (
                                     award_name         VARCHAR(255) NOT NULL,
                                     award_description  TEXT,
                                     awarded_at         TIMESTAMPTZ DEFAULT NOW(),
+
                                     CONSTRAINT award_trip_name_unique UNIQUE (trip_id, award_name)
 );

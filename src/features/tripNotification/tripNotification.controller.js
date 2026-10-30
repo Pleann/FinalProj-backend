@@ -10,8 +10,19 @@ class NotificationController {
     async getNotifications(req, res) {
         try {
             const { userId } = req.params;
-            const notifications = await this.tripNotificationService.getNotifications(userId);
-            res.status(200).json(notifications.map(n => new tripNotificationDto(n)));
+
+            if (String(req.user.userId) !== String(userId)) {
+                return res.status(403).json({
+                    error: 'You can only access your own notifications'
+                });
+            }
+
+            const notifications =
+                await this.tripNotificationService.getNotifications(userId);
+
+            res.status(200).json(
+                notifications.map(n => new tripNotificationDto(n))
+            );
         } catch (err) {
             res.status(500).json({ error: err.message });
         }

@@ -9,8 +9,7 @@ class TripSummaryController {
         try {
             const { tripId } = req.params;
             const { capturedAt, locationName, latitude, longitude } = req.body;
-            // Replace with req.user.userId when JWT authentication is enabled.
-            const userId = req.user?.userId || 1;
+            const userId = req.user.userId;
             const photo = await this.tripSummaryService.savePhoto(
                 tripId,
                 userId,
@@ -97,8 +96,7 @@ class TripSummaryController {
     async getActivityGraphDataByUser(req, res) {
         try {
             const { tripId } = req.params;
-            const { userId } = req.query;
-            const graphData = await this.tripSummaryService.getActivityGraphDataByUser(tripId, userId);
+            const graphData = await this.tripSummaryService.getActivityGraphDataByUser(tripId, req.user.userId);
             res.status(200).json({
                 message: 'Activity graph data retrieved successfully',
                 graphData,

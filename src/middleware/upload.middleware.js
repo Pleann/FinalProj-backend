@@ -3,11 +3,13 @@ const multer = require('multer');
 const storage = multer.memoryStorage(); // store in memory, not disk
 
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    console.log('Uploaded filename:', file.originalname);
+    console.log('Uploaded mimetype:', file.mimetype);
+    const allowedTypes = ['image/jpeg', 'image/jpg','image/png', 'image/webp'];
     if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Invalid image format. Only JPEG, PNG, WEBP allowed'), false);
+        cb(new Error('Invalid image format. Only JPEG, JPG, PNG, WEBP allowed'), false);
     }
 };
 
