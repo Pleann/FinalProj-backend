@@ -1,4 +1,5 @@
 const TripFriendDao = require('./tripFriend.dao');
+const sendNotification = require('../../util/sendNotification');
 
 //add error catching!!
 class TripFriendService {
@@ -7,14 +8,15 @@ class TripFriendService {
     }
 
     async sendRequest(senderId, receiverId) {
-        const request = await this.tripFriendDao.insertRequest(
-            senderId,
-            receiverId
-        );
+        const request = await this.tripFriendDao.insertRequest(senderId, receiverId);
 
-        if (!request) {
-            throw new Error('Unable to send friend request');
-        }
+        await sendNotification(
+            [receiverId],
+            null,
+            'FriendRequest',
+            'You have received a friend request.',
+            request.requestId,
+        );
 
         return request;
     }

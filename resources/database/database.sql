@@ -19,7 +19,7 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-CREATE TYPE notification_type AS ENUM ('TripStarted', 'Invite');
+CREATE TYPE notification_type AS ENUM ('TripStarted', 'Invite', 'FriendRequest', 'TripUpdate', 'TripCancelled', 'TripCompleted');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS Stop (
 CREATE TABLE IF NOT EXISTS Notification (
                                     notification_id   SERIAL PRIMARY KEY,
                                     user_id            INTEGER NOT NULL REFERENCES Account(user_id) ON DELETE CASCADE,
-                                    trip_id            INTEGER NOT NULL REFERENCES Trip(trip_id) ON DELETE CASCADE,
+                                    trip_id            INTEGER REFERENCES Trip(trip_id) ON DELETE CASCADE,
                                     title              TEXT NOT NULL,
                                     message            TEXT NOT NULL,
                                     reference_id       INTEGER,

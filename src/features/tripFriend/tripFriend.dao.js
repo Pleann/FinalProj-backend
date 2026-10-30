@@ -201,26 +201,18 @@ class TripFriendDao {
     async findUsersByNameOrFirstName(userId, term) {
         // Escape LIKE wildcards so "%" or "_" typed by the user are treated literally
         const escaped = term.replace(/[\\%_]/g, '\\$&');
+
         const { rows } = await pool.query(
             `SELECT a.user_id, a.first_name, a.last_name, a.username, a.profile_picture_url
-         FROM Account a
-         WHERE a.user_id <> $1
-           AND (a.username ILIKE $2 OR a.first_name ILIKE $2)
-           AND NOT EXISTS (
-               SELECT 1 FROM Friend f
-               WHERE (f.user_id = $1 AND f.friend_user_id = a.user_id)
-                  OR (f.user_id = a.user_id AND f.friend_user_id = $1)
-           )
-           AND NOT EXISTS (
-               SELECT 1 FROM FriendRequest r
-               WHERE (r.sender_id = $1 AND r.receiver_id = a.user_id)
-                  OR (r.sender_id = a.user_id AND r.receiver_id = $1)
-           )
-         ORDER BY (LOWER(a.username) = LOWER($3)) DESC,
-                  a.username ASC
-         LIMIT 20`,
+             FROM Account a
+             WHERE a.user_id <> $1
+               AND (a.username ILIKE $2 OR a.first_name ILIKE $2)
+             ORDER BY (LOWER(a.username) = LOWER($3)) DESC,
+                      a.username ASC
+                 LIMIT 20`,
             [userId, `${escaped}%`, term]
         );
+
         return rows.map(row => new RecommendedFriendEntity(row));
     }
 }
