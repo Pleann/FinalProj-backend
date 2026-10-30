@@ -154,39 +154,96 @@ class tripAccountService {
     }
 
     async getLeaderboard(limit) {
-        return this.dao.getLeaderboard(limit);
+        const leaderboard = await this.dao.getLeaderboard(limit);
+        if (!leaderboard) {
+            throw new Error('Unable to retrieve leaderboard');
+        }
+
+        return leaderboard;
     }
 
     async getAccountById(userId) {
-        return await this.dao.findAccountById(userId);
+        if (!userId) {
+            throw new Error('User ID is required');
+        }
+
+        const account = await this.dao.findAccountById(userId);
+
+        if (!account) {
+            throw new Error('Account not found');
+        }
+
+        return account;
     }
 
     async getAllAccounts() {
-        return await this.dao.findAllAccounts();
+        const accounts = await this.dao.findAllAccounts();
+``
+        if (!accounts) {
+            throw new Error('Unable to retrieve accounts');
+        }
+
+        return accounts;
     }
 
     async getAccountTrips(userId) {
-        if (!userId) throw new Error('User ID is required');
-        return await this.dao.findTripsByAccount(userId);
+        if (!userId) {
+            throw new Error('User ID is required');
+        }
+
+        const trips = await this.dao.findTripsByAccount(userId);
+
+        if (!trips) {
+            throw new Error('Unable to retrieve account trips');
+        }
+
+        return trips;
     }
 
     async isUsernameTaken(username) {
-        if (!username) throw new Error('Username is required');
+        if (!username) {
+            throw new Error('Username is required');
+        }
+
+        // false is a valid result when the username is available.
         return this.dao.usernameExists(username);
     }
 
     async isEmailTaken(email) {
-        if (!email) throw new Error('Email is required');
+        if (!email) {
+            throw new Error('Email is required');
+        }
+
+        // false is a valid result when the email is available.
         return this.dao.emailExists(email);
     }
 
     async getAwardsByUserId(userId) {
-        if (!userId) throw new Error('User ID is required');
-        return await this.dao.findAwardsByUserId(userId);
+        if (!userId) {
+            throw new Error('User ID is required');
+        }
+
+        const awards = await this.dao.findAwardsByUserId(userId);
+
+        if (!awards) {
+            throw new Error('Unable to retrieve user awards');
+        }
+
+        return awards;
     }
 
     async deleteAccount(userId) {
-        return await this.dao.deleteAccount(userId);
+        if (!userId) {
+            throw new Error('User ID is required');
+        }
+
+        const deleted = await this.dao.deleteAccount(userId);
+
+        if (!deleted) {
+            throw new Error('Account not found');
+        }
+
+        return deleted;
     }
 
     async forgotPassword(email) {
