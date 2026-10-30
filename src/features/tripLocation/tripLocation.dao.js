@@ -114,13 +114,15 @@ class LocationDao {
         const { rows } = await pool.query(
             `UPDATE Account
              SET reliability_score = COALESCE(reliability_score, 0) + $1
-             WHERE id = $2
-             RETURNING id, reliability_score`,
-                [delta, userId],
+             WHERE user_id = $2
+                 RETURNING user_id, reliability_score`,
+            [delta, userId],
         );
+
         if (rows.length === 0) {
             throw new Error(`User not found: ${userId}`);
         }
+
         return rows[0];
     }
 }

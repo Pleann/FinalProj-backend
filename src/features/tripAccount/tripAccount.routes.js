@@ -20,6 +20,7 @@ router.get('/:userId', (req, res) => tripAccountController.getAccountById(req, r
 router.get('/:userId/trips', (req, res) => tripAccountController.getAccountTrips(req, res));
 router.get('/:userId/awards', authenticate, (req, res) => tripAccountController.getAwardsByUserId(req, res));
 router.delete('/:userId', (req, res) => tripAccountController.deleteAccount(req, res));
+router.get('/:userId/score-history', authenticate, (req, res) => tripAccountController.getScoreHistory(req, res));
 
 
 

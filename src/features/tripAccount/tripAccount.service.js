@@ -25,6 +25,14 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+const RELIABILITY_POINTS = {
+    Early: 25,
+    OnTime: 15,
+    Late: -10,
+    VeryLate: -25,
+    Missing: 0,
+    Ghost: 0,
+};
 
 // (async () => {
 //     const hash = await bcrypt.hash('notSecurePassword6', 10);
@@ -376,6 +384,22 @@ class tripAccountService {
         return {
             message: 'Password reset successfully'
         };
+    }
+
+    async getScoreHistory(userId) {
+        if (!userId || isNaN(Number(userId))) {
+            throw new Error('Invalid user ID');
+        }
+
+        const history = await this.dao.findScoreHistoryByUserId(userId);
+
+        return history.map(record => ({
+            tripId: record.trip_id,
+            tripName: record.trip_name,
+            startDate: record.start_date,
+            attendance: record.attendance,
+            scoreChange: RELIABILITY_POINTS[record.attendance] ?? 0,
+        }));
     }
 }
 

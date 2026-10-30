@@ -233,6 +233,24 @@ class TripAccountDao {
 
         return rows.length > 0;
     }
+
+    async findScoreHistoryByUserId(userId) {
+        const { rows } = await pool.query(
+            `SELECT
+            t.trip_id,
+            t.trip_name,
+            t.start_date,
+            tm.attendance
+         FROM TripMember tm
+         JOIN Trip t ON t.trip_id = tm.trip_id
+         WHERE tm.user_id = $1
+           AND tm.attendance != 'Undecided'
+         ORDER BY t.start_date DESC`,
+            [userId]
+        );
+
+        return rows;
+    }
 }
 
 module.exports = TripAccountDao;

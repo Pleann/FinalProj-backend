@@ -170,6 +170,24 @@ class TripAccountController {
             });
         }
     }
+
+    async getScoreHistory(req, res) {
+        try {
+            const { userId } = req.params;
+
+            const history = await this.service.getScoreHistory(userId);
+
+            return res.status(200).json({
+                success: true,
+                data: history,
+            });
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            });
+        }
+    }
 }
 
 module.exports = TripAccountController;
